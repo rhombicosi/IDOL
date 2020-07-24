@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <p style="color:purple;">These are {{user.username}} problems!</p>
+  <h2>Problems</h2>
+
+  <p>
+    <a href="{% url 'upload_user_problem' %}" class="btn btn-primary">Upload problem</a>
+  </p>
+  <table class="table mb-0">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Download</th>
+        <th>Submit</th>
+        <th>Job Number</th>
+        <th></th>
+        <th>Status</th>
+        <th></th>
+        <th>Result</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+      <tbody>
+        {% for problem in user.problems.all %}
+          <tr>
+            <td>{{ problem.title }}</td>
+            <td>
+              <a href="{{ problem.xml.url }}" class="btn btn-primary btn-sm" target="_blank">Download XML</a>
+            </td>
+            <td>
+              <form method="post" action="{% url 'submit_user_problem' problem.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary btn-sm">Submit Problem</button>
+            </form>
+            </td>
+            <td>
+              {% if problem.jobNumber %}
+                {{ problem.jobNumber }}
+              {% endif %}
+            </td>
+            <td>
+              <form method="post" action="{% url 'status_user_problem' problem.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-secondary btn-sm">Check status</button>
+              </form>
+            </td>
+            <td>
+              {% if problem.status %}
+                {{ problem.status }}
+              {% endif %}
+            </td>
+            <td>
+              <form method="post" action="{% url 'read_user_result' problem.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary btn-sm">Result</button>
+              </form>
+            </td>
+            <td>
+              {% if problem.result %}
+                <a href="{{ problem.result.url }}" class="btn btn-primary btn-sm" target="_blank">Download Result</a>
+              {% endif %}
+            </td>
+            <td>
+              <form method="post" action="{% url 'delete_user_problem' problem.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+  </table>
+{% endblock %}
