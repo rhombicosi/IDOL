@@ -30,7 +30,8 @@ def upload_user_problem(request):
             # form.save()
             t = form.cleaned_data["title"]
             xml = form.cleaned_data["xml"]
-            p = UserProblem(title=t, xml=xml)
+            slvr = form.cleaned_data["solver"]
+            p = UserProblem(title=t, xml=xml, solver=slvr)
             p.save()
             request.user.problems.add(p)
             return redirect('user_problems')
@@ -45,36 +46,40 @@ def upload_user_problem(request):
 def submit_user_problem(request, pk):
 
     if request.method == 'POST':
-
         problem = UserProblem.objects.get(pk=pk)
         problem.status = None
+        slvr = problem.solver
 
-        neos = xmlrpclib.ServerProxy("https://neos-server.org:3333")
+        if slvr == 'Gurobi':
+            print('Gurobi solver is chosen')
+        if slvr == 'NEOS':
+            print('NEOS solver is chosen')
+            neos = xmlrpclib.ServerProxy("https://neos-server.org:3333")
 
-        alive = neos.ping()
-        if alive != "NeosServer is alive\n":
-            sys.stderr.write("Could not make connection to NEOS Server\n")
-            sys.exit(1)
+            alive = neos.ping()
+            if alive != "NeosServer is alive\n":
+                sys.stderr.write("Could not make connection to NEOS Server\n")
+                sys.exit(1)
 
-        xml = ""
-        try:
-            xmlfile = open(problem.xml.path, "r")
-            buffer = 1
-            while buffer:
-                buffer = xmlfile.read()
-                xml += buffer
-            xmlfile.close()
-        except IOError as e:
-            sys.stderr.write("I/O error(%d): %s\n" % (e.errno, e.strerror))
-            sys.exit(1)
+            xml = ""
+            try:
+                xmlfile = open(problem.xml.path, "r")
+                buffer = 1
+                while buffer:
+                    buffer = xmlfile.read()
+                    xml += buffer
+                xmlfile.close()
+            except IOError as e:
+                sys.stderr.write("I/O error(%d): %s\n" % (e.errno, e.strerror))
+                sys.exit(1)
 
-        (jobNumber, password) = neos.submitJob(xml)
+            (jobNumber, password) = neos.submitJob(xml)
 
-        UserProblem.objects.filter(pk=pk).update(jobNumber=jobNumber, password=password)
+            UserProblem.objects.filter(pk=pk).update(jobNumber=jobNumber, password=password)
 
-        sys.stdout.write("Job number = %d\nJob password = %s\n" % (jobNumber, password))
+            sys.stdout.write("Job number = %d\nJob password = %s\n" % (jobNumber, password))
 
-        print('problem submitted %s' % xmlfile.name)
+            print('problem submitted %s' % xmlfile.name)
 
     return render(request, 'user_problems.html')
 

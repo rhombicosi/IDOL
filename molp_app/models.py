@@ -3,8 +3,15 @@ from django.contrib.auth.models import User
 
 
 class Problem(models.Model):
+    GUROBI = 'Gurobi'
+    NEOS = 'NEOS'
+    SOLVERS = (
+        (GUROBI, 'Gurobi'),
+        (NEOS, 'NEOS')
+    )
     title = models.CharField(max_length=100)
     xml = models.FileField(upload_to='problems/xmls/')
+    solver = models.CharField(max_length=10, choices=SOLVERS, default=GUROBI)
 
     jobNumber = models.IntegerField(null=True, blank=True)
     password = models.CharField(max_length=50, null=True, blank=True)
@@ -22,9 +29,16 @@ class Problem(models.Model):
 
 
 class UserProblem(models.Model):
+    GUROBI = 'Gurobi'
+    NEOS = 'NEOS'
+    SOLVERS = (
+        (GUROBI, 'Gurobi'),
+        (NEOS, 'NEOS')
+    )
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="problems", null=True)
     title = models.CharField(max_length=100)
     xml = models.FileField(upload_to='problems/xmls/')
+    solver = models.CharField(max_length=10, choices=SOLVERS, default=GUROBI)
 
     jobNumber = models.IntegerField(null=True, blank=True)
     password = models.CharField(max_length=50, null=True, blank=True)
