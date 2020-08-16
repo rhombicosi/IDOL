@@ -56,4 +56,6 @@ class UserProblem(models.Model):
     def delete(self, *args, **kwargs):
         self.xml.delete()
         self.result.delete()
+
+        self.chebyshev.delete()
         super().delete(*args, **kwargs)

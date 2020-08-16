@@ -83,7 +83,7 @@ def submit_user_gurobi_problem(request, pk):
 
         ItemSet = range(NumOfObj, len(dvars) + NumOfObj)
         ObjSet = range(NumOfObj)
-        SSet = range(1)
+        SSet = range(0, 1)
 
         ystar = []
         for i in range(NumOfObj):
@@ -95,32 +95,26 @@ def submit_user_gurobi_problem(request, pk):
         Fun.update(mo.addVars(ObjSet, vtype=GRB.CONTINUOUS, name='f'))
         Elem.update(mo.addVars(ItemSet, vtype=GRB.BINARY, name='El'))
 
-        name_0 = 'chebknap_0'
-        # mo.write(settings.STATIC_TMP + '/' + name_0 + '.lp')
-        mo.write(settings.MEDIA_ROOT + '/problems/chebyshev/' + name_0 + '.lp')
+        # # name_0 = 'chebknap_0'
+        # # # mo.write(settings.STATIC_TMP + '/' + name_0 + '.lp')
+        # # mo.write(settings.MEDIA_ROOT + '/problems/chebyshev/' + name_0 + '.lp')
 
         # convert objectives to constraints
         for i in range(NumOfObj):
             mo.addConstr(-Fun[i] + sum(Elem[k] * objParams[i][k - NumOfObj] for k in ItemSet) == 0, name='ObjC' + str(i))
 
-        # for test purpose
-        name_1 = 'chebknap_1'
-        mo.write(settings.MEDIA_ROOT + '/problems/chebyshev/' + name_1 + '.lp')
-
         # add initial constraints
+        i = 0
         for c in constrs:
-            mo.addConstr(sum(Elem[k] * AA[0][k - NumOfObj] for k in ItemSet), c.Sense, c.RHS, c.ConstrName)
-
-        # for test purpose
-        name_2 = 'chebknap_2'
-        mo.write(settings.MEDIA_ROOT + '/problems/chebyshev/' + name_2 + '.lp')
+            mo.addConstr(sum(Elem[k] * AA[i][k - NumOfObj] for k in ItemSet), c.Sense, c.RHS, c.ConstrName)
+            i += 1
 
         # add artificial variable s
-        S.update(mo.addVars(SSet, vtype=GRB.CONTINUOUS, name='s'))
+        # S.update(mo.addVars(SSet, vtype=GRB.CONTINUOUS, name='s'))
+        S = mo.addVars(SSet, vtype=GRB.CONTINUOUS, name='s')
+        mo.update()
 
-        # for test purpose
-        name_3 = 'chebknap_3'
-        mo.write(settings.MEDIA_ROOT + '/problems/chebyshev/' + name_3 + '.lp')
+        print('S[0]: {}'.format(S[0]))
 
         # add chebyshev constraints
         sum_term = 0
@@ -140,20 +134,22 @@ def submit_user_gurobi_problem(request, pk):
             (S[0] - weight_term[i] - sum_term >= 0
              for i in range(NumOfObj)), name='CH')
 
-        # for test purpose
-        name_4 = 'chebknap_4'
-        mo.write(settings.MEDIA_ROOT + '/problems/chebyshev/' + name_4 + '.lp')
-
         mo.setObjective(S[0], GRB.MINIMIZE)
 
         name = 'chebknap'
         timestr = time.strftime("%Y%m%d-%H%M%S")
+        temp_path = settings.MEDIA_ROOT + '/problems/chebyshev/' + name + timestr + '_temp.lp'
 
-        mo.write(settings.MEDIA_ROOT + '/problems/chebyshev/' + name + timestr + '.lp')
+        # write model into temporary file with gurobi
+        mo.write(temp_path)
 
-        # Using File
-        f = open(settings.MEDIA_ROOT + '/problems/chebyshev/' + name + timestr + '.lp')
+        # add file to the model
+        f = open(temp_path)
         problem.chebyshev.save(name + timestr + '.lp', File(f))
+        f.close()
+
+        # remove temporary file
+        os.remove(temp_path)
 
         mo.optimize()
 
