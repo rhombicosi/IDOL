@@ -10,6 +10,7 @@
         <thead>
             <tr>
                 <th>Title</th>
+                <th>Solver</th>
                 <th>Download</th>
                 <th>Submit</th>
                 <th>Job Number</th>
@@ -24,14 +25,19 @@
             {% for problem in problems %}
                 <tr>
                     <td>{{ problem.title }}</td>
+                    <td>{{ problem.solver}}</td>
                     <td>
-                        <a href="{{ problem.xml.url }}" class="btn btn-primary btn-sm" target="_blank">Download XML</a>
+                        {% if problem.solver == "NEOS" %}
+                            <a href="{{ problem.xml.url }}" class="btn btn-primary btn-sm" target="_blank">Download XML</a>
+                        {% else %}
+                            <a href="{{ problem.xml.url }}" class="btn btn-primary btn-sm" target="_blank">Download LP</a>
+                        {% endif %}
                     </td>
                     <td>
                         <form method="post" action="{% url 'submit_problem' problem.pk %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-primary btn-sm">Submit Problem</button>
-                    </form>
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary btn-sm">Submit Problem</button>
+                        </form>
                     </td>
                     <td>
                         {% if problem.jobNumber %}

@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import re_path, path, include
-from .views import view_common, view_anonymous, view_user
+from .views import view_common, view_anonymous, view_user, view_user_gurobi, view_user_problem_gurobi
 
 
 urlpatterns = [
@@ -16,10 +16,13 @@ urlpatterns = [
     re_path(r'^user_problems/$', view_user.user_problems, name='user_problems'),
     re_path(r'^user_problems/upload/$', view_user.upload_user_problem, name='upload_user_problem'),
     path('user_problems/submit_user/<int:pk>/', view_user.submit_user_problem, name='submit_user_problem'),
+    path('user_problems/submit_user_gurobi/<int:pk>/', view_user_gurobi.submit_user_gurobi_problem, name='submit_user_gurobi_problem'),
     path('user_problems/status_user/<int:pk>/', view_user.status_user_problem, name='status_user_problem'),
     path('user_problems/result_user/<int:pk>/', view_user.read_user_result, name='read_user_result'),
     path('user_problems/delete_user/<int:pk>/', view_user.delete_user_problem, name='delete_user_problem'),
     path('accounts/', include('django.contrib.auth.urls')),
+
+    path('problem/<int:pk>/', view_user_problem_gurobi.user_problem, name='user_problem'),
 ]
 
 if settings.DEBUG:

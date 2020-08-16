@@ -10,7 +10,7 @@ class Problem(models.Model):
         (NEOS, 'NEOS')
     )
     title = models.CharField(max_length=100)
-    xml = models.FileField(upload_to='problems/xmls/')
+    xml = models.FileField(upload_to='problems/xmls/', verbose_name='input file')
     solver = models.CharField(max_length=10, choices=SOLVERS, default=GUROBI)
 
     jobNumber = models.IntegerField(null=True, blank=True)
@@ -37,14 +37,18 @@ class UserProblem(models.Model):
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="problems", null=True)
     title = models.CharField(max_length=100)
-    xml = models.FileField(upload_to='problems/xmls/')
+    xml = models.FileField(upload_to='problems/xmls/', verbose_name='input file')
     solver = models.CharField(max_length=10, choices=SOLVERS, default=GUROBI)
 
+    # NEOS fields
     jobNumber = models.IntegerField(null=True, blank=True)
     password = models.CharField(max_length=50, null=True, blank=True)
     status = models.CharField(max_length=50, null=True, blank=True)
 
     result = models.FileField(upload_to='problems/solutions/', blank=True)
+
+    # Gurobi fields
+    chebyshev = models.FileField(upload_to='problems/chebyshev/', blank=True)
 
     def __str__(self):
         return self.title

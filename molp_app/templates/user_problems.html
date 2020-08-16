@@ -11,6 +11,7 @@
     <thead>
       <tr>
         <th>Title</th>
+        <th>Solver</th>
         <th>Download</th>
         <th>Submit</th>
         <th>Job Number</th>
@@ -25,14 +26,26 @@
         {% for problem in user.problems.all %}
           <tr>
             <td>{{ problem.title }}</td>
+            <td>{{ problem.solver}}</td>
             <td>
-              <a href="{{ problem.xml.url }}" class="btn btn-primary btn-sm" target="_blank">Download XML</a>
+              {% if problem.solver == "NEOS" %}
+                <a href="{{ problem.xml.url }}" class="btn btn-primary btn-sm" target="_blank">Download XML</a>
+              {% else %}
+                <a href="{{ problem.xml.url }}" class="btn btn-primary btn-sm" target="_blank">Download LP</a>
+              {% endif %}
             </td>
             <td>
-              <form method="post" action="{% url 'submit_user_problem' problem.pk %}">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-primary btn-sm">Submit Problem</button>
-            </form>
+              {% if problem.solver == "NEOS" %}
+                <form method="post" action="{% url 'submit_user_problem' problem.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-secondary btn-sm">Submit Problem</button>
+                </form>
+              {% else %}
+                <form method="post" action="{% url 'submit_user_gurobi_problem' problem.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-secondary btn-sm">Submit Problem</button>
+                </form>
+              {% endif %}
             </td>
             <td>
               {% if problem.jobNumber %}
@@ -40,10 +53,17 @@
               {% endif %}
             </td>
             <td>
-              <form method="post" action="{% url 'status_user_problem' problem.pk %}">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-secondary btn-sm">Check status</button>
-              </form>
+              {% if problem.solver == "NEOS" %}
+                <form method="post" action="{% url 'status_user_problem' problem.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-secondary btn-sm">Check status</button>
+                </form>
+              {% else %}
+                <form method="post" action="{% url 'user_problem' problem.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-secondary btn-sm">Problem page</button>
+                </form>
+              {% endif %}
             </td>
             <td>
               {% if problem.status %}
