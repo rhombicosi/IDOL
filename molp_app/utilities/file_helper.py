@@ -28,10 +28,7 @@ def read_txt(path, file):
 
 
 def save_gurobi_files(filename, filepath, extension, model, problem, field):
-    # filename = 'chebknap'
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    # filepath = '/problems/chebyshev/'
-    # temp_path = settings.MEDIA_ROOT + filepath + name + timestr + '_temp.lp'
     temp_path = settings.MEDIA_ROOT + filepath + filename + timestr + '_temp.' + extension
 
     # write model into temporary file with gurobi
@@ -39,7 +36,6 @@ def save_gurobi_files(filename, filepath, extension, model, problem, field):
 
     # add file to the model
     f = open(temp_path)
-    # problem.chebyshev.save(filename + timestr + '.lp', File(f))
 
     if field == 'chebyshev':
         problem.chebyshev.save(filename + timestr + '.' + extension, File(f))
