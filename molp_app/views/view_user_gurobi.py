@@ -4,6 +4,8 @@ from django.core.files.base import ContentFile
 from django.shortcuts import redirect, render
 
 from molp_app.models import UserProblem, UserProblemParameters
+from molp_app.utilities.file_helper import *
+
 
 import gurobipy as gbp
 from gurobipy import *
@@ -137,44 +139,15 @@ def submit_user_gurobi_problem(request, pk):
 
         mo.setObjective(S[0], GRB.MINIMIZE)
 
-        name = 'chebknap'
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        temp_path = settings.MEDIA_ROOT + '/problems/chebyshev/' + name + timestr + '_temp.lp'
-
-        # write model into temporary file with gurobi
-        mo.write(temp_path)
-
-        # add file to the model
-        f = open(temp_path)
-        problem.chebyshev.save(name + timestr + '.lp', File(f))
-        f.close()
-
-        # remove temporary file
-        os.remove(temp_path)
+        # save chebyshev scalarization into .lp file
+        save_gurobi_files('chebknap', '/problems/chebyshev/', 'lp', mo, problem, 'chebyshev')
 
         mo.optimize()
 
-        # write solution
-        sol_name = 'solution'
-        sol_timestr = time.strftime("%Y%m%d-%H%M%S")
-        sol_temp_path = settings.MEDIA_ROOT + '/problems/solutions/' + sol_name + sol_timestr + '_temp.sol'
-
-        mo.write(sol_temp_path)
-
-        # add file to the model
-        f_sol = open(sol_temp_path)
-        problem.result.save(sol_name + sol_timestr + '.sol', File(f_sol))
-        f_sol.close()
-
-        # remove temporary file
-        os.remove(sol_temp_path)
-
-        if problem.result:
-            print('if result url {}'.format(problem.result.url))
+        # save solution into .sol file
+        save_gurobi_files('solution', '/problems/solutions/', 'sol', mo, problem, 'result')
 
         for v in mo.getVars():
             print('{} {}'.format(v.varName, v.x))
 
     return render(request, 'user_problems.html')
-
-
