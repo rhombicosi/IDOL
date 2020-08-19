@@ -59,3 +59,19 @@ class UserProblem(models.Model):
 
         self.chebyshev.delete()
         super().delete(*args, **kwargs)
+
+
+class UserProblemParameters(models.Model):
+    problem = models.ForeignKey(UserProblem, on_delete=models.CASCADE, related_name="parameters", null=True)
+    numberOfObjectives = models.IntegerField(null=True, blank=True)
+    weights = models.FileField(upload_to='problems/parameters/', blank=True)
+    reference = models.FileField(upload_to='problems/parameters/', blank=True)
+
+    def __str__(self):
+        return self.problem.title
+
+    def delete(self, *args, **kwargs):
+        self.weights.delete()
+        self.reference.delete()
+
+        super().delete(*args, **kwargs)

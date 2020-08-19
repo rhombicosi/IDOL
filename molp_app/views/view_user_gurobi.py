@@ -1,8 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.core.files import File
+from django.core.files.base import ContentFile
 from django.shortcuts import redirect, render
 
-from molp_app.models import UserProblem
+from molp_app.models import UserProblem, UserProblemParameters
 
 import gurobipy as gbp
 from gurobipy import *
@@ -153,7 +154,27 @@ def submit_user_gurobi_problem(request, pk):
 
         mo.optimize()
 
+        # write solution
+        sol_name = 'solution'
+        sol_timestr = time.strftime("%Y%m%d-%H%M%S")
+        sol_temp_path = settings.MEDIA_ROOT + '/problems/solutions/' + sol_name + sol_timestr + '_temp.sol'
+
+        mo.write(sol_temp_path)
+
+        # add file to the model
+        f_sol = open(sol_temp_path)
+        problem.result.save(sol_name + sol_timestr + '.sol', File(f_sol))
+        f_sol.close()
+
+        # remove temporary file
+        os.remove(sol_temp_path)
+
+        if problem.result:
+            print('if result url {}'.format(problem.result.url))
+
         for v in mo.getVars():
-            print('%s %g' % (v.varName, v.x))
+            print('{} {}'.format(v.varName, v.x))
 
     return render(request, 'user_problems.html')
+
+

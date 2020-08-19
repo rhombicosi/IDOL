@@ -11,8 +11,8 @@ except ImportError:
 
 from django.shortcuts import render, redirect
 
-from ..forms import ProblemForm
-from ..models import UserProblem
+from ..forms import ProblemForm, ParametersForm
+from ..models import UserProblem, UserProblemParameters
 
 
 # registered user
@@ -139,13 +139,43 @@ def read_user_result(request, pk):
         msg = neos.getFinalResults(jobNumber, password)
         sys.stdout.write(msg.data.decode())
         f.save(new_name, ContentFile(msg.data.decode()))
+
+    print('NEOS result {}'.format(problem.result.url))
     return render(request, 'user_problems.html')
 
 
 @login_required
 def delete_user_problem(request, pk):
     if request.method == 'POST':
-        book = UserProblem.objects.get(pk=pk)
-        book.delete()
+        problem = UserProblem.objects.get(pk=pk)
+
+        for params in problem.parameters.all():
+            params.delete()
+
+        problem.delete()
+
     return redirect('user_problems')
 
+
+@login_required
+def update_user_problem(request, pk):
+    if request.method == 'POST':
+        form = ParametersForm(request.POST, request.FILES)
+        problem = UserProblem.objects.get(pk=pk)
+        params = UserProblemParameters()
+        print()
+        if form.is_valid():
+            if form.cleaned_data["weights"]:
+                w = form.cleaned_data["weights"]
+                params.weights = w
+            if form.cleaned_data["reference"]:
+                ref = form.cleaned_data["reference"]
+                params.reference = ref
+            params.save()
+            problem.parameters.add(params)
+            return redirect('user_problems')
+    else:
+        form = ParametersForm()
+    return render(request, 'update_user_problem.html', {
+        'form': form
+    })

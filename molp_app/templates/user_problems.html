@@ -59,10 +59,7 @@
                   <button type="submit" class="btn btn-secondary btn-sm">Check status</button>
                 </form>
               {% else %}
-                <form method="post" action="{% url 'user_problem' problem.pk %}">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-secondary btn-sm">Problem page</button>
-                </form>
+                <a href="{% url 'update_user_problem' problem.pk%}" class="btn btn-secondary btn-sm">Update problem</a>
               {% endif %}
             </td>
             <td>
