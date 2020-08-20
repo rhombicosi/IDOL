@@ -14,6 +14,8 @@ import time
 
 from django.conf import settings
 
+from shutil import copyfile
+
 
 @login_required
 def submit_user_gurobi_problem(request, pk):
@@ -98,10 +100,6 @@ def submit_user_gurobi_problem(request, pk):
         Fun.update(mo.addVars(ObjSet, vtype=GRB.CONTINUOUS, name='f'))
         Elem.update(mo.addVars(ItemSet, vtype=GRB.BINARY, name='El'))
 
-        # # name_0 = 'chebknap_0'
-        # # # mo.write(settings.STATIC_TMP + '/' + name_0 + '.lp')
-        # # mo.write(settings.MEDIA_ROOT + '/problems/chebyshev/' + name_0 + '.lp')
-
         # convert objectives to constraints
         for i in range(NumOfObj):
             mo.addConstr(-Fun[i] + sum(Elem[k] * objParams[i][k - NumOfObj] for k in ItemSet) == 0, name='ObjC' + str(i))
@@ -151,3 +149,22 @@ def submit_user_gurobi_problem(request, pk):
             print('{} {}'.format(v.varName, v.x))
 
     return render(request, 'user_problems.html')
+
+
+@login_required
+def create_user_gurobi_problem(request, pk):
+    problem = UserProblem.objects.get(pk=pk)
+    lpfile = problem.xml.path
+    lpname = os.path.basename(lpfile)
+
+    p = UserProblem()
+
+    f = open(lpfile)
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    p.xml.save(timestr+lpname, File(f))
+    p.title = timestr + '_' + problem.title
+    p.solver = problem.solver
+    f.close()
+    p.save()
+
+    request.user.problems.add(p)

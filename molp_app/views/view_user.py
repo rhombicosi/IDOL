@@ -4,6 +4,8 @@ import sys
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 
+from .view_user_gurobi import create_user_gurobi_problem
+
 try:
     import xmlrpc.client as xmlrpclib
 except ImportError:
@@ -11,8 +13,8 @@ except ImportError:
 
 from django.shortcuts import render, redirect
 
-from ..forms import ProblemForm, ParametersForm
-from ..models import UserProblem, UserProblemParameters
+from molp_app.forms import ProblemForm, ParametersForm
+from molp_app.models import UserProblem, UserProblemParameters
 
 
 # registered user
@@ -44,7 +46,6 @@ def upload_user_problem(request):
 
 @login_required
 def submit_user_problem(request, pk):
-
     if request.method == 'POST':
         problem = UserProblem.objects.get(pk=pk)
         problem.status = None
@@ -173,6 +174,7 @@ def update_user_problem(request, pk):
                 params.reference = ref
             params.save()
             problem.parameters.add(params)
+            create_user_gurobi_problem(request, pk)
             return redirect('user_problems')
     else:
         form = ParametersForm()
