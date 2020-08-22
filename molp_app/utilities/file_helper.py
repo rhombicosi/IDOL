@@ -41,6 +41,8 @@ def save_gurobi_files(filename, filepath, extension, model, problem, field):
         problem.chebyshev.save(filename + timestr + '.' + extension, File(f))
     elif field == 'result':
         problem.result.save(filename + timestr + '.' + extension, File(f))
+    else:
+        problem.xml.save(filename + timestr + '.' + extension, File(f))
 
     f.close()
 

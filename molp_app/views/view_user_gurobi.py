@@ -1,20 +1,13 @@
 from django.contrib.auth.decorators import login_required
-from django.core.files import File
-from django.core.files.base import ContentFile
 from django.shortcuts import redirect, render
 
-from molp_app.models import UserProblem, UserProblemParameters
+from molp_app.models import UserProblem
 from molp_app.utilities.file_helper import *
 
 
 import gurobipy as gbp
 from gurobipy import *
-import numpy as np
 import time
-
-from django.conf import settings
-
-from shutil import copyfile
 
 
 @login_required
@@ -152,19 +145,25 @@ def submit_user_gurobi_problem(request, pk):
 
 
 @login_required
-def create_user_gurobi_problem(request, pk):
+def create_user_gurobi_problem(request, pk, weights):
     problem = UserProblem.objects.get(pk=pk)
     lpfile = problem.xml.path
     lpname = os.path.basename(lpfile)
 
+    model = read(lpfile)
+
+    for i in range(len(weights)):
+        model.Params.ObjNumber = i
+        model.setAttr('ObjNWeight', weights[i])
+        print('weights[{}] is {}'.format(i, weights[i]))
+
     p = UserProblem()
 
-    f = open(lpfile)
+    save_gurobi_files(lpname, '/problems/xmls/', 'lp', model, p, 'xml')
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    p.xml.save(timestr+lpname, File(f))
     p.title = timestr + '_' + problem.title
     p.solver = problem.solver
-    f.close()
     p.save()
 
     request.user.problems.add(p)
+

@@ -1,10 +1,12 @@
 import time
 import sys
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 
 from .view_user_gurobi import create_user_gurobi_problem
+from molp_app.utilities.file_helper import read_txt
 
 try:
     import xmlrpc.client as xmlrpclib
@@ -15,6 +17,8 @@ from django.shortcuts import render, redirect
 
 from molp_app.forms import ProblemForm, ParametersForm
 from molp_app.models import UserProblem, UserProblemParameters
+
+from gurobipy import *
 
 
 # registered user
@@ -174,7 +178,13 @@ def update_user_problem(request, pk):
                 params.reference = ref
             params.save()
             problem.parameters.add(params)
-            create_user_gurobi_problem(request, pk)
+
+            w_path = settings.MEDIA_ROOT + '/problems/parameters/weights/'
+            w_name = os.path.basename(params.weights.path)
+            weights = read_txt(w_path, w_name)
+
+            create_user_gurobi_problem(request, pk, weights)
+
             return redirect('user_problems')
     else:
         form = ParametersForm()
