@@ -83,6 +83,8 @@ def submit_user_gurobi_problem(request, pk):
         ObjSet = range(NumOfObj)
         SSet = range(0, 1)
 
+        # TODO: obtain a reference point from file or
+        #  calculated as a solution to single objective problems
         ystar = []
         for i in range(NumOfObj):
             ystar.append(sum(objParams[i]))
@@ -131,12 +133,12 @@ def submit_user_gurobi_problem(request, pk):
         mo.setObjective(S[0], GRB.MINIMIZE)
 
         # save chebyshev scalarization into .lp file
-        save_gurobi_files('chebknap', '/problems/chebyshev/', 'lp', mo, problem, 'chebyshev')
+        save_gurobi_files('chebknap', '/problems/chebyshev/', 'lp', 'chebyshev', problem, mo)
 
         mo.optimize()
 
         # save solution into .sol file
-        save_gurobi_files('solution', '/problems/solutions/', 'sol', mo, problem, 'result')
+        save_gurobi_files('solution', '/problems/solutions/', 'sol', 'result', problem, mo)
 
         for v in mo.getVars():
             print('{} {}'.format(v.varName, v.x))
@@ -159,9 +161,9 @@ def create_user_gurobi_problem(request, pk, weights):
 
     p = UserProblem()
 
-    save_gurobi_files(lpname, '/problems/xmls/', 'lp', model, p, 'xml')
+    save_gurobi_files(lpname, '/problems/xmls/', 'lp', 'xml', p, model)
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    p.title = timestr + '_' + problem.title
+    p.title = problem.title + '_' + timestr
     p.solver = problem.solver
     p.save()
 

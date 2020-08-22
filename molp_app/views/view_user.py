@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 
 from .view_user_gurobi import create_user_gurobi_problem
-from molp_app.utilities.file_helper import read_txt
+from molp_app.utilities.file_helper import read_txt, save_gurobi_files
 
 try:
     import xmlrpc.client as xmlrpclib
@@ -45,6 +45,44 @@ def upload_user_problem(request):
         form = ProblemForm()
     return render(request, 'upload_problem.html', {
         'form': form
+    })
+
+
+@login_required
+def upload_user_problem_parameters(request):
+    if request.method == 'POST':
+        problem_form = ProblemForm(request.POST, request.FILES)
+        parameters_form = ParametersForm(request.POST, request.FILES)
+
+        if problem_form.is_valid() and parameters_form.is_valid():
+            t = problem_form.cleaned_data["title"]
+            xml = problem_form.cleaned_data["xml"]
+            slvr = problem_form.cleaned_data["solver"]
+            p = UserProblem(title=t, xml=xml, solver=slvr)
+            p.save()
+
+            params = UserProblemParameters()
+
+            if parameters_form.cleaned_data["weights"]:
+                w = parameters_form.cleaned_data["weights"]
+                params.weights = w
+            else:
+                save_gurobi_files('weights', '/problems/parameters/weights', 'txt', 'weights', params, None, '0.5, 0.5')
+            if parameters_form.cleaned_data["reference"]:
+                ref = parameters_form.cleaned_data["reference"]
+                params.reference = ref
+            params.save()
+            p.parameters.add(params)
+
+            request.user.problems.add(p)
+            return redirect('user_problems')
+    else:
+        problem_form = ProblemForm()
+        parameters_form = ParametersForm()
+
+    return render(request, 'upload_user_problem.html', {
+        'problem_form': problem_form,
+        'parameters_form': parameters_form,
     })
 
 
