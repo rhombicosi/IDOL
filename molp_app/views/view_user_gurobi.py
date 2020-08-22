@@ -15,6 +15,12 @@ def submit_user_gurobi_problem(request, pk):
 
     if request.method == 'POST':
         problem = UserProblem.objects.get(pk=pk)
+        params = problem.parameters.all()
+        print('parameters objects path: {}'.format(params[0].weights.path))
+
+        # for p in params:
+        #     print('parameters objects path: {}'.format(p.weights.path))
+
         lpfile = problem.xml.path
 
         model = read(lpfile)
@@ -53,11 +59,22 @@ def submit_user_gurobi_problem(request, pk):
             objParams.append(model.getAttr('ObjN', dvars))
         print('Objectives coefficients: ', objParams)
 
-        # get objectives weights
+        # # get objectives weights from attributes
+        # objWeights = []
+        # for i in range(NumOfObj):
+        #     model.Params.ObjNumber = i
+        #     objWeights.append(model.getAttr('ObjNWeight'))
+        # print('Objectives weights: ', objWeights)
+
+        # get weights from txt file
+        w_path = settings.MEDIA_ROOT + '/problems/parameters/weights/'
+        w_name = os.path.basename(params[0].weights.path)
+        weights = read_txt(w_path, w_name)
+
         objWeights = []
-        for i in range(NumOfObj):
+        for i in range(len(weights)):
             model.Params.ObjNumber = i
-            objWeights.append(model.getAttr('ObjNWeight'))
+            objWeights.append(weights[i])
         print('Objectives weights: ', objWeights)
 
         # get constraints parameters
