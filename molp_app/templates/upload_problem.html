@@ -10,7 +10,8 @@
                     <h2>Upload problem</h2>
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        {{ form|crispy }}
+                        {{ problem_form|crispy }}
+                        {{ parameters_form|crispy }}
                         <button type="submit" class="btn btn-primary">Upload problem</button>
                     </form>
                 </div>

@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
-from molp_app.models import UserProblem
+from molp_app.models import Problem
 from molp_app.utilities.file_helper import *
 
 
@@ -10,11 +10,12 @@ from gurobipy import *
 import time
 
 
-@login_required
-def submit_user_gurobi_problem(request, pk):
-    problem = UserProblem.objects.get(pk=pk)
+def submit_gurobi_problem(request, pk):
+    problem = Problem.objects.get(pk=pk)
     solver = problem.solver
+
     if request.method == 'POST':
+
         params = problem.parameters.all()
         lpfile = problem.xml.path
 
@@ -96,7 +97,7 @@ def submit_user_gurobi_problem(request, pk):
         SSet = range(0, 1)
 
         # TODO: obtain a reference point from file or
-        #  calculate it as a solution to single objective problems
+        #  calculated as a solution to single objective problems
         ystar = []
         for i in range(NumOfObj):
             ystar.append(sum(objParams[i]))
@@ -155,21 +156,20 @@ def submit_user_gurobi_problem(request, pk):
         for v in mo.getVars():
             print('{} {}'.format(v.varName, v.x))
 
-        problems = UserProblem.objects.filter(user=request.user)
+        problems = Problem.objects.all()
         problems_neos = problems.filter(solver="NEOS")
         problems_gurobi = problems.filter(solver="Gurobi")
 
-    return render(request, 'user_problems.html', {
+    return render(request, 'problem_list.html', {
         'problems': problems,
         'problems_neos': problems_neos,
         'problems_gurobi': problems_gurobi,
-        'solver': solver,
+        'solver': solver
     })
 
 
-@login_required
-def create_user_gurobi_problem(request, pk, weights):
-    problem = UserProblem.objects.get(pk=pk)
+def create_gurobi_problem(pk, weights):
+    problem = Problem.objects.get(pk=pk)
     lpfile = problem.xml.path
     lpname = os.path.basename(lpfile)
 
@@ -180,7 +180,7 @@ def create_user_gurobi_problem(request, pk, weights):
         model.setAttr('ObjNWeight', weights[i])
         print('weights[{}] is {}'.format(i, weights[i]))
 
-    p = UserProblem()
+    p = Problem()
 
     save_gurobi_files(lpname, '/problems/xmls/', 'lp', 'xml', p, model)
     timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -188,5 +188,5 @@ def create_user_gurobi_problem(request, pk, weights):
     p.solver = problem.solver
     p.save()
 
-    request.user.problems.add(p)
     return p
+

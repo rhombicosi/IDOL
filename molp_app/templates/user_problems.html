@@ -1,91 +1,139 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <p style="color:purple;">These are {{user.username}} problems!</p>
-  <h2>Problems</h2>
+  <h2> {{user.username}} Problems</h2>
 
   <p>
     <a href="{% url 'upload_user_problem_parameters' %}" class="btn btn-primary">Upload problem</a>
   </p>
-  <table class="table mb-0">
-    <thead>
-      <tr>
-        <th>Title</th>
-        <th>Solver</th>
-        <th>Download</th>
-        <th>Submit</th>
-        <th>Job Number</th>
-        <th></th>
-        <th>Status</th>
-        <th></th>
-        <th>Result</th>
-        <th>Delete</th>
-      </tr>
-    </thead>
-      <tbody>
-        {% for problem in user.problems.all %}
+
+  <div class="nav nav-tabs nav-fill">
+    <a class="nav-item nav-link {% if solver == 'Gurobi' or solver == None %} active {% endif %}" data-toggle="tab" href="#gurobi">Gurobi</a>
+    <a class="nav-item nav-link {% if solver == 'NEOS' %} active {% endif %}" data-toggle="tab" href="#neos">NEOS</a>
+  </div>
+
+  <div class="tab-content">
+
+    <div id="gurobi" class="tab-pane fade show {% if solver == 'Gurobi' or solver == None %} active {% endif %}">
+      {% if problems_gurobi %}
+      <table class="table mb-0">
+        <thead>
           <tr>
-            <td>{{ problem.title }}</td>
-            <td>{{ problem.solver}}</td>
-            <td>
-              {% if problem.solver == "NEOS" %}
-                <a href="{{ problem.xml.url }}" class="btn btn-primary btn-sm" target="_blank">Download XML</a>
-              {% else %}
+            <th>Title</th>
+            <th>Solver</th>
+            <th>Download</th>
+            <th>Submit</th>
+            <th>Update</th>
+            <th>Result</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for problem in problems_gurobi %}
+            <tr>
+              <td>{{ problem.title }}</td>
+              <td>{{ problem.solver}}</td>
+              <td>
                 <a href="{{ problem.xml.url }}" class="btn btn-primary btn-sm" target="_blank">Download LP</a>
-              {% endif %}
-            </td>
-            <td>
-              {% if problem.solver == "NEOS" %}
-                <form method="post" action="{% url 'submit_user_problem' problem.pk %}">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-secondary btn-sm">Submit Problem</button>
-                </form>
-              {% else %}
+              </td>
+              <td>
                 <form method="post" action="{% url 'submit_user_gurobi_problem' problem.pk %}">
                   {% csrf_token %}
                   <button type="submit" class="btn btn-secondary btn-sm">Submit Problem</button>
                 </form>
-              {% endif %}
-            </td>
-            <td>
-              {% if problem.jobNumber %}
-                {{ problem.jobNumber }}
-              {% endif %}
-            </td>
-            <td>
-              {% if problem.solver == "NEOS" %}
+              </td>
+              <td>
+                <a href="{% url 'update_user_problem' problem.pk%}" class="btn btn-secondary btn-sm">Update problem</a>
+              </td>
+              <td>
+                {% if problem.result %}
+                  <a href="{{ problem.result.url }}" class="btn btn-primary btn-sm" target="_blank">Download Result</a>
+                {% endif %}
+              </td>
+              <td>
+                <form method="post" action="{% url 'delete_user_problem' problem.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
+
+    <div id="neos" class="tab-pane fade {% if solver == 'NEOS'%} show active {% endif %}">
+      {% if problems_neos %}
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Solver</th>
+            <th>Download</th>
+            <th>Submit</th>
+            <th>Job Number</th>
+            <th></th>
+            <th>Status</th>
+            <th></th>
+            <th>Result</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for problem in problems_neos %}
+            <tr>
+              <td>{{ problem.title }}</td>
+              <td>{{ problem.solver}}</td>
+              <td>
+                <a href="{{ problem.xml.url }}" class="btn btn-primary btn-sm" target="_blank">Download XML</a>
+              </td>
+              <td>
+                <form method="post" action="{% url 'submit_user_problem' problem.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-secondary btn-sm">Submit Problem</button>
+                </form>
+              </td>
+              <td>
+                {% if problem.jobNumber %}
+                  {{ problem.jobNumber }}
+                {% endif %}
+              </td>
+              <td>
                 <form method="post" action="{% url 'status_user_problem' problem.pk %}">
                   {% csrf_token %}
                   <button type="submit" class="btn btn-secondary btn-sm">Check status</button>
                 </form>
-              {% else %}
-                <a href="{% url 'update_user_problem' problem.pk%}" class="btn btn-secondary btn-sm">Update problem</a>
-              {% endif %}
-            </td>
-            <td>
-              {% if problem.status %}
-                {{ problem.status }}
-              {% endif %}
-            </td>
-            <td>
-              <form method="post" action="{% url 'read_user_result' problem.pk %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-secondary btn-sm">Result</button>
-              </form>
-            </td>
-            <td>
-              {% if problem.result %}
-                <a href="{{ problem.result.url }}" class="btn btn-primary btn-sm" target="_blank">Download Result</a>
-              {% endif %}
-            </td>
-            <td>
-              <form method="post" action="{% url 'delete_user_problem' problem.pk %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-              </form>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-  </table>
+              </td>
+              <td>
+                {% if problem.status %}
+                  {{ problem.status }}
+                {% endif %}
+              </td>
+              <td>
+                <form method="post" action="{% url 'read_user_result' problem.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-secondary btn-sm">Result</button>
+                </form>
+              </td>
+              <td>
+                {% if problem.result %}
+                  <a href="{{ problem.result.url }}" class="btn btn-primary btn-sm" target="_blank">Download Result</a>
+                {% endif %}
+              </td>
+              <td>
+                <form method="post" action="{% url 'delete_user_problem' problem.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
+
+  </div>
+
 {% endblock %}

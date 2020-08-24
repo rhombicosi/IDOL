@@ -2,6 +2,10 @@ import time
 import sys
 
 from django.core.files.base import ContentFile
+from django.conf import settings
+
+from .view_anonymous_gurobi import create_gurobi_problem
+from ..utilities.file_helper import read_txt, save_gurobi_files
 
 try:
     import xmlrpc.client as xmlrpclib
@@ -10,24 +14,23 @@ except ImportError:
 
 from django.shortcuts import render, redirect
 
-from ..forms import ProblemForm
-from ..models import Problem
+from ..forms import ProblemForm, ParametersForm
+from ..models import Problem, ProblemParameters
+
+from gurobipy import os
 
 
 # optimization
 # anonymous user
-def delete_problem(request, pk):
-    if request.method == 'POST':
-        problem = Problem.objects.get(pk=pk)
-        problem.delete()
-    return redirect('problem_list')
-
-
 def problem_list(request):
     problems = Problem.objects.all()
+    problems_neos = Problem.objects.filter(solver="NEOS")
+    problems_gurobi = Problem.objects.filter(solver="Gurobi")
 
     return render(request, 'problem_list.html', {
-        'problems': problems
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_gurobi': problems_gurobi,
     })
 
 
@@ -45,12 +48,55 @@ def upload_problem(request):
     })
 
 
-def submit_problem(request, pk):
+def upload_problem_parameters(request):
     problems = Problem.objects.all()
+    problems_neos = problems.filter(solver="NEOS")
+    problems_gurobi = problems.filter(solver="Gurobi")
 
     if request.method == 'POST':
+        problem_form = ProblemForm(request.POST, request.FILES)
+        parameters_form = ParametersForm(request.POST, request.FILES)
 
-        problem = Problem.objects.get(pk=pk)
+        if problem_form.is_valid() and parameters_form.is_valid():
+            t = problem_form.cleaned_data["title"]
+            xml = problem_form.cleaned_data["xml"]
+            solver = problem_form.cleaned_data["solver"]
+            p = Problem(title=t, xml=xml, solver=solver)
+            p.save()
+
+            params = ProblemParameters()
+
+            if parameters_form.cleaned_data["weights"]:
+                w = parameters_form.cleaned_data["weights"]
+                params.weights = w
+            else:
+                save_gurobi_files('weights', '/problems/parameters/weights', 'txt', 'weights', params, None, '0.5, 0.5')
+            if parameters_form.cleaned_data["reference"]:
+                ref = parameters_form.cleaned_data["reference"]
+                params.reference = ref
+            params.save()
+            p.parameters.add(params)
+
+            return render(request, 'problem_list.html', {
+                'problems': problems,
+                'problems_neos': problems_neos,
+                'problems_gurobi': problems_gurobi,
+                'solver': solver
+            })
+    else:
+        problem_form = ProblemForm()
+        parameters_form = ParametersForm()
+
+    return render(request, 'upload_problem.html', {
+        'problem_form': problem_form,
+        'parameters_form': parameters_form,
+    })
+
+
+def submit_problem(request, pk):
+    problem = Problem.objects.get(pk=pk)
+    solver = problem.solver
+    if request.method == 'POST':
         problem.status = None
 
         neos = xmlrpclib.ServerProxy("https://neos-server.org:3333")
@@ -93,17 +139,22 @@ def submit_problem(request, pk):
 
         print('problem submitted %s' % xmlfile.name)
 
+    problems = Problem.objects.all()
+    problems_neos = Problem.objects.filter(solver="NEOS")
+    problems_gurobi = Problem.objects.filter(solver="Gurobi")
+
     return render(request, 'problem_list.html', {
-        'problems': problems
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_gurobi': problems_gurobi,
+        'solver': solver,
     })
 
 
 def status_problem(request, pk):
-    problems = Problem.objects.all()
-
+    problem = Problem.objects.get(pk=pk)
+    solver = problem.solver
     if request.method == 'POST':
-
-        problem = Problem.objects.get(pk=pk)
 
         neos = xmlrpclib.ServerProxy("https://neos-server.org:3333")
 
@@ -124,15 +175,22 @@ def status_problem(request, pk):
             sys.stdout.write("Job number = %d\nJob password = %s\n" % (jobNumber, password))
             sys.stdout.write("status = %s\n" % status)
 
+    problems = Problem.objects.all()
+    problems_neos = Problem.objects.filter(solver="NEOS")
+    problems_gurobi = Problem.objects.filter(solver="Gurobi")
+
     return render(request, 'problem_list.html', {
-        'problems': problems
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_gurobi': problems_gurobi,
+        'solver': solver
     })
 
 
 def read_result(request, pk):
-    problems = Problem.objects.all()
 
     problem = Problem.objects.get(pk=pk)
+    solver = problem.solver
     (jobNumber, password) = (problem.jobNumber, problem.password)
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -155,6 +213,69 @@ def read_result(request, pk):
         msg = neos.getFinalResults(jobNumber, password)
         sys.stdout.write(msg.data.decode())
         f.save(new_name, ContentFile(msg.data.decode()))
+
+    problems = Problem.objects.all()
+    problems_neos = Problem.objects.filter(solver="NEOS")
+    problems_gurobi = Problem.objects.filter(solver="Gurobi")
+
     return render(request, 'problem_list.html', {
-        'problems': problems
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_gurobi': problems_gurobi,
+        'solver': solver,
+    })
+
+
+def delete_problem(request, pk):
+    problem = Problem.objects.get(pk=pk)
+    solver = problem.solver
+    if request.method == 'POST':
+
+        for params in problem.parameters.all():
+            params.delete()
+
+        problem.delete()
+
+    problems = Problem.objects.all()
+    problems_neos = problems.filter(solver="NEOS")
+    problems_gurobi = problems.filter(solver="Gurobi")
+
+    return render(request, 'problem_list.html', {
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_gurobi': problems_gurobi,
+        'solver': solver
+    })
+
+
+def update_problem(request, pk):
+
+    if request.method == 'POST':
+        form = ParametersForm(request.POST, request.FILES)
+        problem = Problem.objects.get(pk=pk)
+        params = ProblemParameters()
+        print()
+        if form.is_valid():
+            if form.cleaned_data["weights"]:
+                w = form.cleaned_data["weights"]
+                params.weights = w
+            if form.cleaned_data["reference"]:
+                ref = form.cleaned_data["reference"]
+                params.reference = ref
+            params.save()
+            problem.parameters.add(params)
+
+            if params.weights:
+                w_path = settings.MEDIA_ROOT + '/problems/parameters/weights/'
+                w_name = os.path.basename(params.weights.path)
+                weights = read_txt(w_path, w_name)
+
+                new_p = create_gurobi_problem(pk, weights)
+                new_p.parameters.add(params)
+
+            return redirect('problem_list')
+    else:
+        form = ParametersForm()
+    return render(request, 'update_problem.html', {
+        'form': form
     })

@@ -18,13 +18,21 @@ from django.shortcuts import render, redirect
 from molp_app.forms import ProblemForm, ParametersForm
 from molp_app.models import UserProblem, UserProblemParameters
 
-from gurobipy import *
+from gurobipy import os
 
 
 # registered user
 @login_required
 def user_problems(request):
-    return render(request, 'user_problems.html')
+    problems = UserProblem.objects.filter(user=request.user)
+    problems_neos = problems.filter(solver="NEOS")
+    problems_gurobi = problems.filter(solver="Gurobi")
+
+    return render(request, 'user_problems.html', {
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_gurobi': problems_gurobi,
+    })
 
 
 @login_required
@@ -43,13 +51,18 @@ def upload_user_problem(request):
             return redirect('user_problems')
     else:
         form = ProblemForm()
-    return render(request, 'upload_problem.html', {
+    return render(request, 'upload_user_problem.html', {
         'form': form
     })
 
 
 @login_required
 def upload_user_problem_parameters(request):
+
+    problems = UserProblem.objects.filter(user=request.user)
+    problems_neos = problems.filter(solver="NEOS")
+    problems_gurobi = problems.filter(solver="Gurobi")
+
     if request.method == 'POST':
         problem_form = ProblemForm(request.POST, request.FILES)
         parameters_form = ParametersForm(request.POST, request.FILES)
@@ -57,8 +70,8 @@ def upload_user_problem_parameters(request):
         if problem_form.is_valid() and parameters_form.is_valid():
             t = problem_form.cleaned_data["title"]
             xml = problem_form.cleaned_data["xml"]
-            slvr = problem_form.cleaned_data["solver"]
-            p = UserProblem(title=t, xml=xml, solver=slvr)
+            solver = problem_form.cleaned_data["solver"]
+            p = UserProblem(title=t, xml=xml, solver=solver)
             p.save()
 
             params = UserProblemParameters()
@@ -75,7 +88,12 @@ def upload_user_problem_parameters(request):
             p.parameters.add(params)
 
             request.user.problems.add(p)
-            return redirect('user_problems')
+            return render(request, 'user_problems.html', {
+                'problems': problems,
+                'problems_neos': problems_neos,
+                'problems_gurobi': problems_gurobi,
+                'solver': solver
+            })
     else:
         problem_form = ProblemForm()
         parameters_form = ParametersForm()
@@ -88,51 +106,58 @@ def upload_user_problem_parameters(request):
 
 @login_required
 def submit_user_problem(request, pk):
+    problem = UserProblem.objects.get(pk=pk)
+    solver = problem.solver
+
     if request.method == 'POST':
-        problem = UserProblem.objects.get(pk=pk)
+
         problem.status = None
-        slvr = problem.solver
 
-        if slvr == 'Gurobi':
-            print('Gurobi solver is chosen')
-        if slvr == 'NEOS':
-            print('NEOS solver is chosen')
-            neos = xmlrpclib.ServerProxy("https://neos-server.org:3333")
+        print('NEOS solver is chosen')
+        neos = xmlrpclib.ServerProxy("https://neos-server.org:3333")
 
-            alive = neos.ping()
-            if alive != "NeosServer is alive\n":
-                sys.stderr.write("Could not make connection to NEOS Server\n")
-                sys.exit(1)
+        alive = neos.ping()
+        if alive != "NeosServer is alive\n":
+            sys.stderr.write("Could not make connection to NEOS Server\n")
+            sys.exit(1)
 
-            xml = ""
-            try:
-                xmlfile = open(problem.xml.path, "r")
-                buffer = 1
-                while buffer:
-                    buffer = xmlfile.read()
-                    xml += buffer
-                xmlfile.close()
-            except IOError as e:
-                sys.stderr.write("I/O error(%d): %s\n" % (e.errno, e.strerror))
-                sys.exit(1)
+        xml = ""
+        try:
+            xmlfile = open(problem.xml.path, "r")
+            buffer = 1
+            while buffer:
+                buffer = xmlfile.read()
+                xml += buffer
+            xmlfile.close()
+        except IOError as e:
+            sys.stderr.write("I/O error(%d): %s\n" % (e.errno, e.strerror))
+            sys.exit(1)
 
-            (jobNumber, password) = neos.submitJob(xml)
+        (jobNumber, password) = neos.submitJob(xml)
 
-            UserProblem.objects.filter(pk=pk).update(jobNumber=jobNumber, password=password)
+        UserProblem.objects.filter(pk=pk).update(jobNumber=jobNumber, password=password)
 
-            sys.stdout.write("Job number = %d\nJob password = %s\n" % (jobNumber, password))
+        sys.stdout.write("Job number = %d\nJob password = %s\n" % (jobNumber, password))
 
-            print('problem submitted %s' % xmlfile.name)
+        print('problem submitted %s' % xmlfile.name)
 
-    return render(request, 'user_problems.html')
+    problems = UserProblem.objects.filter(user=request.user)
+    problems_neos = problems.filter(solver="NEOS")
+    problems_gurobi = problems.filter(solver="Gurobi")
+
+    return render(request, 'user_problems.html', {
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_gurobi': problems_gurobi,
+        'solver': solver
+    })
 
 
 @login_required
 def status_user_problem(request, pk):
-
+    problem = UserProblem.objects.get(pk=pk)
+    solver = problem.solver
     if request.method == 'POST':
-
-        problem = UserProblem.objects.get(pk=pk)
 
         neos = xmlrpclib.ServerProxy("https://neos-server.org:3333")
 
@@ -153,13 +178,24 @@ def status_user_problem(request, pk):
             sys.stdout.write("Job number = %d\nJob password = %s\n" % (jobNumber, password))
             sys.stdout.write("status = %s\n" % status)
 
-    return render(request, 'user_problems.html')
+    problems = UserProblem.objects.filter(user=request.user)
+    problems_neos = problems.filter(solver="NEOS")
+    problems_gurobi = problems.filter(solver="Gurobi")
+
+    return render(request, 'user_problems.html', {
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_gurobi': problems_gurobi,
+        'solver': solver,
+    })
 
 
 @login_required
 def read_user_result(request, pk):
 
     problem = UserProblem.objects.get(pk=pk)
+    solver = problem.solver
+
     (jobNumber, password) = (problem.jobNumber, problem.password)
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -184,20 +220,40 @@ def read_user_result(request, pk):
         f.save(new_name, ContentFile(msg.data.decode()))
 
     print('NEOS result {}'.format(problem.result.url))
-    return render(request, 'user_problems.html')
+
+    problems = UserProblem.objects.filter(user=request.user)
+    problems_neos = problems.filter(solver="NEOS")
+    problems_gurobi = problems.filter(solver="Gurobi")
+
+    return render(request, 'user_problems.html', {
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_gurobi': problems_gurobi,
+        'solver': solver,
+    })
 
 
 @login_required
 def delete_user_problem(request, pk):
-    if request.method == 'POST':
-        problem = UserProblem.objects.get(pk=pk)
+    problem = UserProblem.objects.get(pk=pk)
+    solver = problem.solver
 
+    if request.method == 'POST':
         for params in problem.parameters.all():
             params.delete()
 
         problem.delete()
 
-    return redirect('user_problems')
+    problems = UserProblem.objects.filter(user=request.user)
+    problems_neos = problems.filter(solver="NEOS")
+    problems_gurobi = problems.filter(solver="Gurobi")
+
+    return render(request, 'user_problems.html', {
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_gurobi': problems_gurobi,
+        'solver': solver
+    })
 
 
 @login_required
@@ -217,11 +273,16 @@ def update_user_problem(request, pk):
             params.save()
             problem.parameters.add(params)
 
-            w_path = settings.MEDIA_ROOT + '/problems/parameters/weights/'
-            w_name = os.path.basename(params.weights.path)
-            weights = read_txt(w_path, w_name)
+            # create new problem only if new weights file is uploaded
+            if params.weights:
+                w_path = settings.MEDIA_ROOT + '/problems/parameters/weights/'
+                w_name = os.path.basename(params.weights.path)
+                weights = read_txt(w_path, w_name)
 
-            create_user_gurobi_problem(request, pk, weights)
+                new_p = create_user_gurobi_problem(request, pk, weights)
+                new_p.parameters.add(params)
+
+            # TODO: update problem reference
 
             return redirect('user_problems')
     else:
