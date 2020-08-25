@@ -8,6 +8,7 @@ from molp_app.utilities.file_helper import *
 import gurobipy as gbp
 from gurobipy import *
 import time
+import numpy as np
 
 
 def submit_gurobi_problem(request, pk):
@@ -62,16 +63,25 @@ def submit_gurobi_problem(request, pk):
         #     objWeights.append(model.getAttr('ObjNWeight'))
         # print('Objectives weights: ', objWeights)
 
-        # get weights from txt file
-        w_path = settings.MEDIA_ROOT + '/problems/parameters/weights/'
-        w_name = os.path.basename(params[0].weights.path)
-        weights = read_txt(w_path, w_name)
-
         objWeights = []
-        for i in range(len(weights)):
-            model.Params.ObjNumber = i
-            objWeights.append(weights[i])
-        print('Objectives weights: ', objWeights)
+        if params:
+            # get weights from txt file
+            if params[0].weights:
+                w_path = settings.MEDIA_ROOT + '/problems/parameters/weights/'
+                w_name = os.path.basename(params[0].weights.path)
+                weights = read_txt(w_path, w_name)
+
+                for i in range(len(weights)):
+                    model.Params.ObjNumber = i
+                    objWeights.append(weights[i])
+                print('Objectives weights from file: ', objWeights)
+        else:
+            # set equal weights programmatically
+            weights = np.full(NumOfObj, 1 / NumOfObj)
+            for i in range(len(weights)):
+                model.Params.ObjNumber = i
+                objWeights.append(weights[i])
+            print('Objectives weights assigned by program: ', objWeights)
 
         # get constraints parameters
         A = model.getA()

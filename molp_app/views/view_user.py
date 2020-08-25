@@ -79,13 +79,17 @@ def upload_user_problem_parameters(request):
             if parameters_form.cleaned_data["weights"]:
                 w = parameters_form.cleaned_data["weights"]
                 params.weights = w
-            else:
-                save_gurobi_files('weights', '/problems/parameters/weights', 'txt', 'weights', params, None, '0.5, 0.5')
+                params.save()
+            # else:
+            #     save_gurobi_files('weights', '/problems/parameters/weights', 'txt', 'weights', params, None, '0.5, 0.5')
             if parameters_form.cleaned_data["reference"]:
                 ref = parameters_form.cleaned_data["reference"]
                 params.reference = ref
-            params.save()
-            p.parameters.add(params)
+                params.save()
+
+            if parameters_form.cleaned_data["weights"] or parameters_form.cleaned_data["reference"]:
+                # params.save()
+                p.parameters.add(params)
 
             request.user.problems.add(p)
             return render(request, 'user_problems.html', {
