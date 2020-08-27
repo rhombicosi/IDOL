@@ -157,6 +157,7 @@ def submit_user_gurobi_problem(request, pk):
         # save chebyshev scalarization into .lp file
         save_gurobi_files('chebknap', '/problems/chebyshev/', 'lp', 'chebyshev', problem, mo)
 
+        mo.Params.TIME_LIMIT = 60.0
         mo.optimize()
 
         # save solution into .sol file
