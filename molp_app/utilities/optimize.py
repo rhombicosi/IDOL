@@ -57,13 +57,12 @@ def main(argv):
             outputfile = args.ofile
         if args.problemkey:
             problemkey = args.problemkey
-    except:
-
+    except argparse.ArgumentError:
+        print(argparse.ArgumentError('Incorrect argument'))
 
     print('Input file is {}'.format(inputfile))
     print('Output file is {}'.format(outputfile))
     print('Problem key is {}'.format(problemkey))
-
     model = read(inputfile)
     model.Params.TIME_LIMIT = constants.TIMELIMIT
     model.optimize()
