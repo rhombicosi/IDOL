@@ -49,6 +49,15 @@ class ProblemParameters(models.Model):
         super().delete(*args, **kwargs)
 
 
+# class SingleObjectiveProblem(models.Model):
+#     problem = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name="single", null=True)
+#     singlelp = models.FileField(upload_to='problems/single/', verbose_name='single objective')
+#
+#     def delete(self, *args, **kwargs):
+#         self.singlelp.delete()
+#         super().delete(*args, **kwargs)
+
+
 class UserProblem(models.Model):
     GUROBI = 'Gurobi'
     NEOS = 'NEOS'

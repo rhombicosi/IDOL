@@ -25,6 +25,7 @@
         <th>Submit</th>
         <th>Update</th>
         <th>Result</th>
+        <th>Chebyshev</th>
         <th>Delete</th>
       </tr>
       </thead>
@@ -48,6 +49,11 @@
         <td>
           {% if problem.result %}
             <a href="{{ problem.result.url }}" class="btn btn-primary btn-sm" target="_blank">Download Result</a>
+          {% endif %}
+        </td>
+        <td>
+          {% if problem.chebyshev %}
+            <a href="{{ problem.chebyshev.url }}" class="btn btn-primary btn-sm" target="_blank">Download Chebyshev</a>
           {% endif %}
         </td>
         <td>

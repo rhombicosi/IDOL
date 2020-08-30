@@ -105,7 +105,12 @@ def submit_problem(request, pk):
 
         neos = xmlrpclib.ServerProxy("https://neos-server.org:3333")
 
-        alive = neos.ping()
+        try:
+            alive = neos.ping()
+        except IOError as e:
+            sys.stderr.write("I/O error(%d): %s\n" % (e.errno, e.strerror))
+            sys.exit(1)
+
         if alive != "NeosServer is alive\n":
             sys.stderr.write("Could not make connection to NEOS Server\n")
             sys.exit(1)

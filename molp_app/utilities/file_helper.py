@@ -5,6 +5,8 @@ from gurobipy import *
 from django.conf import settings
 from django.core.files import File
 
+from datetime import datetime
+
 
 def read_txt(path, file):
     # data_folder = Path("C:/Users/voka/!PY/django_code/gurobi_samples/")
@@ -34,7 +36,9 @@ def write_txt(filename, content):
 
 
 def save_gurobi_files(filename, filepath, extension, field, entity, model=None, content=None):
-    timestr = time.strftime("%Y%m%d-%H%M%S")
+    # timestr = time.strftime("%Y%m%d-%H%M%S")
+    timestr = datetime.now()
+    timestr = str(timestr.microsecond)
     temp_path = settings.MEDIA_ROOT + filepath + filename + timestr + '_temp.' + extension
 
     # write model into temporary file with gurobi
@@ -62,3 +66,4 @@ def save_gurobi_files(filename, filepath, extension, field, entity, model=None, 
 
     # remove temporary file
     os.remove(temp_path)
+    return settings.MEDIA_ROOT + filepath, f_path
