@@ -1,6 +1,4 @@
 from django.shortcuts import redirect, render
-
-from molp_app.models import Problem
 from molp_app.utilities.file_helper import *
 
 import gurobipy as gbp
@@ -10,6 +8,7 @@ import numpy as np
 
 import subprocess
 import os
+
 
 def submit_gurobi_problem(request, pk):
     problem = Problem.objects.get(pk=pk)
@@ -56,13 +55,7 @@ def submit_gurobi_problem(request, pk):
             objParams.append(model.getAttr('ObjN', dvars))
         print('Objectives coefficients: ', objParams)
 
-        # # get objectives weights from attributes
-        # objWeights = []
-        # for i in range(NumOfObj):
-        #     model.Params.ObjNumber = i
-        #     objWeights.append(model.getAttr('ObjNWeight'))
-        # print('Objectives weights: ', objWeights)
-
+        # get weights
         objWeights = []
         if params:
             # get weights from txt file
@@ -86,12 +79,10 @@ def submit_gurobi_problem(request, pk):
         # get constraints parameters
         A = model.getA()
         AA = A.toarray()
-
         print(A.toarray())
 
         # RHS
         B = model.getAttr('RHS')
-
         print('RHS', B)
 
         # Create chebyshev model
@@ -159,39 +150,34 @@ def submit_gurobi_problem(request, pk):
         temp_path, f_path = save_gurobi_files('chebknap', '/problems/chebyshev/', 'lp', 'chebyshev', problem, mo)
         in_path = temp_path + f_path
         print(in_path)
-        # mo.Params.TIME_LIMIT = 60.0
-        # mo.optimize()
 
-        # save solution into .sol file
-        # save_gurobi_files('solution', '/problems/solutions/', 'sol', 'result', problem, mo)
-
+        # optimization with subprocess
         wd = os.getcwd()
-        print("WORKING DIRECTORY: " + wd)
-
-        my_env = os.environ.copy()
-        my_env["PATH"] = my_env["PATH"] + ";" + wd + "\\;"
-
-        print(my_env["PATH"])
-
-        my_env['PYTHONPATH'] = wd
+        proj_env = os.environ.copy()
+        proj_env["PATH"] = proj_env["PATH"] + ";" + wd + "\\;"
+        proj_env['PYTHONPATH'] = wd
 
         key = str(pk)
-        print(key)
-        subprocess.Popen(["python", "molp_app\\utilities\\optimize.py", "-i", in_path, "-pk", key], env=my_env, cwd=wd)
+        subprocess.Popen(["python", "molp_app\\utilities\\optimize.py", "-i", in_path, "-pk", key], env=proj_env, cwd=wd)
 
         # for v in mo.getVars():
         #     print('{} {}'.format(v.varName, v.x))
 
-        problems = Problem.objects.all()
-        problems_neos = problems.filter(solver="NEOS")
-        problems_gurobi = problems.filter(solver="Gurobi")
+        context = get_context()
+        context.update({'solver': solver})
 
-    return render(request, 'problem_list.html', {
-        'problems': problems,
-        'problems_neos': problems_neos,
-        'problems_gurobi': problems_gurobi,
-        'solver': solver
-    })
+        # problems = Problem.objects.all()
+        # problems_neos = problems.filter(solver="NEOS")
+        # problems_gurobi = problems.filter(solver="Gurobi")
+        #
+        # {
+        #     'problems': problems,
+        #     'problems_neos': problems_neos,
+        #     'problems_gurobi': problems_gurobi,
+        #     'solver': solver
+        # }
+
+    return render(request, 'problem_list.html', context)
 
 
 def create_gurobi_problem(pk, weights):

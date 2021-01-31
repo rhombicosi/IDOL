@@ -7,6 +7,8 @@ from django.core.files import File
 
 from datetime import datetime
 
+from molp_app.models import Problem
+
 
 def read_txt(path, file):
     # data_folder = Path("C:/Users/voka/!PY/django_code/gurobi_samples/")
@@ -67,3 +69,17 @@ def save_gurobi_files(filename, filepath, extension, field, entity, model=None, 
     # remove temporary file
     os.remove(temp_path)
     return settings.MEDIA_ROOT + filepath, f_path
+
+
+def get_context():
+    problems = Problem.objects.all()
+    problems_neos = problems.filter(solver="NEOS")
+    problems_gurobi = problems.filter(solver="Gurobi")
+
+    context = {
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_gurobi': problems_gurobi,
+    }
+
+    return context
