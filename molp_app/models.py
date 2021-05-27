@@ -5,9 +5,11 @@ from django.contrib.auth.models import User
 class Problem(models.Model):
     GUROBI = 'Gurobi'
     NEOS = 'NEOS'
+    CBC = 'CBC'
     SOLVERS = (
         (GUROBI, 'Gurobi'),
-        (NEOS, 'NEOS')
+        (NEOS, 'NEOS'),
+        (CBC, 'CBC'),
     )
     title = models.CharField(max_length=100)
     xml = models.FileField(upload_to='problems/xmls/', verbose_name='input file')
@@ -61,9 +63,11 @@ class ProblemParameters(models.Model):
 class UserProblem(models.Model):
     GUROBI = 'Gurobi'
     NEOS = 'NEOS'
+    CBC = 'CBC'
     SOLVERS = (
         (GUROBI, 'Gurobi'),
-        (NEOS, 'NEOS')
+        (NEOS, 'NEOS'),
+        (CBC, 'CBC')
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="problems", null=True)
     title = models.CharField(max_length=100)
@@ -77,6 +81,9 @@ class UserProblem(models.Model):
 
     # Gurobi fields
     chebyshev = models.FileField(upload_to='problems/chebyshev/', blank=True)
+
+    # CBC fields
+    txt = models.FileField(upload_to='problems/txt/', blank=True)
 
     # common fields
     result = models.FileField(upload_to='problems/solutions/', blank=True)

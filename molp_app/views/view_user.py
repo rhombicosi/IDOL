@@ -27,16 +27,23 @@ def user_problems(request):
     problems = UserProblem.objects.filter(user=request.user)
     problems_neos = problems.filter(solver="NEOS")
     problems_gurobi = problems.filter(solver="Gurobi")
+    problems_cbc = problems.filter(solver="CBC")
 
     return render(request, 'user_problems.html', {
         'problems': problems,
         'problems_neos': problems_neos,
         'problems_gurobi': problems_gurobi,
+        'problems_cbc': problems_cbc,
     })
 
 
 @login_required
 def upload_user_problem(request):
+    problems = UserProblem.objects.filter(user=request.user)
+    problems_neos = problems.filter(solver="NEOS")
+    problems_gurobi = problems.filter(solver="Gurobi")
+    problems_cbc = problems.filter(solver="CBC")
+
     if request.method == 'POST':
         form = ProblemForm(request.POST, request.FILES)
         print()
@@ -48,7 +55,12 @@ def upload_user_problem(request):
             p = UserProblem(title=t, xml=xml, solver=slvr)
             p.save()
             request.user.problems.add(p)
-            return redirect('user_problems')
+            return render('user_problems.html', {
+                'problems': problems,
+                'problems_neos': problems_neos,
+                'problems_gurobi': problems_gurobi,
+                'problems_cbc': problems_cbc
+            })
     else:
         form = ProblemForm()
     return render(request, 'upload_user_problem.html', {
@@ -62,6 +74,7 @@ def upload_user_problem_parameters(request):
     problems = UserProblem.objects.filter(user=request.user)
     problems_neos = problems.filter(solver="NEOS")
     problems_gurobi = problems.filter(solver="Gurobi")
+    problems_cbc = problems.filter(solver="CBC")
 
     if request.method == 'POST':
         problem_form = ProblemForm(request.POST, request.FILES)
@@ -96,6 +109,7 @@ def upload_user_problem_parameters(request):
                 'problems': problems,
                 'problems_neos': problems_neos,
                 'problems_gurobi': problems_gurobi,
+                'problems_cbc': problems_cbc,
                 'solver': solver
             })
     else:
@@ -251,11 +265,13 @@ def delete_user_problem(request, pk):
     problems = UserProblem.objects.filter(user=request.user)
     problems_neos = problems.filter(solver="NEOS")
     problems_gurobi = problems.filter(solver="Gurobi")
+    problems_cbc = problems.filter(solver="CBC")
 
     return render(request, 'user_problems.html', {
         'problems': problems,
         'problems_neos': problems_neos,
         'problems_gurobi': problems_gurobi,
+        'problems_cbc': problems_cbc,
         'solver': solver
     })
 

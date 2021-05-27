@@ -2,7 +2,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import re_path, path, include
 from .views import view_common, view_anonymous, view_user, view_user_gurobi, view_user_problem_gurobi, \
-    view_anonymous_gurobi
+    view_anonymous_gurobi, view_user_cbc
 
 urlpatterns = [
     re_path(r'^$', view_common.home, name='home'),
@@ -18,6 +18,10 @@ urlpatterns = [
     re_path(r'^user_problems/upload/$', view_user.upload_user_problem_parameters, name='upload_user_problem_parameters'),
     path('user_problems/submit_user/<int:pk>/', view_user.submit_user_problem, name='submit_user_problem'),
     path('user_problems/submit_user_gurobi/<int:pk>/', view_user_gurobi.submit_user_gurobi_problem, name='submit_user_gurobi_problem'),
+
+    path('user_problems/submit_user_cbc/<int:pk>/', view_user_cbc.submit_user_cbc_problem, name='submit_user_cbc_problem'),
+
+
     path('user_problems/status_user/<int:pk>/', view_user.status_user_problem, name='status_user_problem'),
     path('user_problems/result_user/<int:pk>/', view_user.read_user_result, name='read_user_result'),
     path('user_problems/delete_user/<int:pk>/', view_user.delete_user_problem, name='delete_user_problem'),

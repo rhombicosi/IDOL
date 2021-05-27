@@ -75,11 +75,13 @@ def get_context():
     problems = Problem.objects.all()
     problems_neos = problems.filter(solver="NEOS")
     problems_gurobi = problems.filter(solver="Gurobi")
+    problems_cbc = problems.filter(solver="CBC")
 
     context = {
         'problems': problems,
         'problems_neos': problems_neos,
         'problems_gurobi': problems_gurobi,
+        'problems_cbc': problems_cbc,
     }
 
     return context

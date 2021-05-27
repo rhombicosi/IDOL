@@ -4,7 +4,6 @@ from django.shortcuts import redirect, render
 from molp_app.models import UserProblem
 from molp_app.utilities.file_helper import *
 
-
 import gurobipy as gbp
 from gurobipy import *
 import time
@@ -169,11 +168,13 @@ def submit_user_gurobi_problem(request, pk):
         problems = UserProblem.objects.filter(user=request.user)
         problems_neos = problems.filter(solver="NEOS")
         problems_gurobi = problems.filter(solver="Gurobi")
+        problems_cbc = problems.filter(solver="CBC")
 
     return render(request, 'user_problems.html', {
         'problems': problems,
         'problems_neos': problems_neos,
         'problems_gurobi': problems_gurobi,
+        'problems_cbc': problems_cbc,
         'solver': solver,
     })
 
