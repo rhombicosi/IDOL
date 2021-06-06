@@ -154,13 +154,13 @@ def submit_user_gurobi_problem(request, pk):
         mo.setObjective(S[0], GRB.MINIMIZE)
 
         # save chebyshev scalarization into .lp file
-        save_gurobi_files('chebknap', '/problems/chebyshev/', 'lp', 'chebyshev', problem, mo)
+        save_files('chebknap', '/problems/chebyshev/', 'lp', 'chebyshev', problem, mo)
 
         mo.Params.TIME_LIMIT = 60.0
         mo.optimize()
 
         # save solution into .sol file
-        save_gurobi_files('solution', '/problems/solutions/', 'sol', 'result', problem, mo)
+        save_files('solution', '/problems/solutions/', 'sol', 'result', problem, mo)
 
         for v in mo.getVars():
             print('{} {}'.format(v.varName, v.x))
@@ -194,7 +194,7 @@ def create_user_gurobi_problem(request, pk, weights):
 
     p = UserProblem()
 
-    save_gurobi_files(lpname, '/problems/xmls/', 'lp', 'xml', p, model)
+    save_files(lpname, '/problems/xmls/', 'lp', 'xml', p, model)
     timestr = time.strftime("%Y%m%d-%H%M%S")
     p.title = problem.title + '_' + timestr
     p.solver = problem.solver

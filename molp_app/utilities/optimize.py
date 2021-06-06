@@ -3,7 +3,7 @@ import argparse
 import django
 django.setup()
 
-from molp_app.utilities.file_helper import save_gurobi_files
+from molp_app.utilities.file_helper import save_files
 import molp_app.utilities.constants as constants
 from molp_app.models import Problem
 
@@ -38,7 +38,7 @@ def main(argv):
     problem = Problem.objects.get(pk=problemkey)
 
     # save solution into .sol file
-    save_gurobi_files('solution', '/problems/solutions/', 'sol', 'result', problem, model)
+    save_files('solution', '/problems/solutions/', 'sol', 'result', problem, model)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 
 from .view_user_gurobi import create_user_gurobi_problem
-from molp_app.utilities.file_helper import read_txt, save_gurobi_files
+from molp_app.utilities.file_helper import read_txt, save_files
 
 try:
     import xmlrpc.client as xmlrpclib
@@ -94,7 +94,7 @@ def upload_user_problem_parameters(request):
                 params.weights = w
                 params.save()
             # else:
-            #     save_gurobi_files('weights', '/problems/parameters/weights', 'txt', 'weights', params, None, '0.5, 0.5')
+            #     save_files('weights', '/problems/parameters/weights', 'txt', 'weights', params, None, '0.5, 0.5')
             if parameters_form.cleaned_data["reference"]:
                 ref = parameters_form.cleaned_data["reference"]
                 params.reference = ref

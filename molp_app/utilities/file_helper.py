@@ -37,7 +37,7 @@ def write_txt(filename, content):
     text_file.close()
 
 
-def save_gurobi_files(filename, filepath, extension, field, entity, model=None, content=None):
+def save_files(filename, filepath, extension, field, entity, model=None, content=None):
     # timestr = time.strftime("%Y%m%d-%H%M%S")
     timestr = datetime.now()
     timestr = str(timestr.microsecond)

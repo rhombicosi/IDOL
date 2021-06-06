@@ -5,7 +5,7 @@ from django.core.files.base import ContentFile
 from django.conf import settings
 
 from .view_anonymous_gurobi import create_gurobi_problem
-from ..utilities.file_helper import read_txt, save_gurobi_files
+from ..utilities.file_helper import read_txt, save_files
 
 try:
     import xmlrpc.client as xmlrpclib
@@ -26,11 +26,13 @@ def problem_list(request):
     problems = Problem.objects.all()
     problems_neos = Problem.objects.filter(solver="NEOS")
     problems_gurobi = Problem.objects.filter(solver="Gurobi")
+    problems_cbc = Problem.objects.filter(solver="CBC")
 
     return render(request, 'problem_list.html', {
         'problems': problems,
         'problems_neos': problems_neos,
         'problems_gurobi': problems_gurobi,
+        'problems_cbc': problems_cbc,
     })
 
 
@@ -52,6 +54,7 @@ def upload_problem_parameters(request):
     problems = Problem.objects.all()
     problems_neos = problems.filter(solver="NEOS")
     problems_gurobi = problems.filter(solver="Gurobi")
+    problems_cbc = Problem.objects.filter(solver="CBC")
 
     if request.method == 'POST':
         problem_form = ProblemForm(request.POST, request.FILES)
@@ -71,7 +74,7 @@ def upload_problem_parameters(request):
                 params.weights = w
                 params.save()
             # else:
-            #     save_gurobi_files('weights', '/problems/parameters/weights', 'txt', 'weights', params, None, '0.5, 0.5')
+            #     save_files('weights', '/problems/parameters/weights', 'txt', 'weights', params, None, '0.5, 0.5')
             if parameters_form.cleaned_data["reference"]:
                 ref = parameters_form.cleaned_data["reference"]
                 params.reference = ref
@@ -85,6 +88,7 @@ def upload_problem_parameters(request):
                 'problems': problems,
                 'problems_neos': problems_neos,
                 'problems_gurobi': problems_gurobi,
+                'problems_cbc': problems_cbc,
                 'solver': solver
             })
     else:
@@ -151,11 +155,13 @@ def submit_problem(request, pk):
     problems = Problem.objects.all()
     problems_neos = Problem.objects.filter(solver="NEOS")
     problems_gurobi = Problem.objects.filter(solver="Gurobi")
+    problems_cbc = Problem.objects.filter(solver="CBC")
 
     return render(request, 'problem_list.html', {
         'problems': problems,
         'problems_neos': problems_neos,
         'problems_gurobi': problems_gurobi,
+        'problems_cbc': problems_cbc,
         'solver': solver,
     })
 
@@ -187,11 +193,13 @@ def status_problem(request, pk):
     problems = Problem.objects.all()
     problems_neos = Problem.objects.filter(solver="NEOS")
     problems_gurobi = Problem.objects.filter(solver="Gurobi")
+    problems_cbc = Problem.objects.filter(solver="CBC")
 
     return render(request, 'problem_list.html', {
         'problems': problems,
         'problems_neos': problems_neos,
         'problems_gurobi': problems_gurobi,
+        'problems_cbc': problems_cbc,
         'solver': solver
     })
 
@@ -226,11 +234,13 @@ def read_result(request, pk):
     problems = Problem.objects.all()
     problems_neos = Problem.objects.filter(solver="NEOS")
     problems_gurobi = Problem.objects.filter(solver="Gurobi")
+    problems_cbc = Problem.objects.filter(solver="CBC")
 
     return render(request, 'problem_list.html', {
         'problems': problems,
         'problems_neos': problems_neos,
         'problems_gurobi': problems_gurobi,
+        'problems_cbc': problems_cbc,
         'solver': solver,
     })
 
@@ -248,11 +258,13 @@ def delete_problem(request, pk):
     problems = Problem.objects.all()
     problems_neos = problems.filter(solver="NEOS")
     problems_gurobi = problems.filter(solver="Gurobi")
+    problems_cbc = Problem.objects.filter(solver="CBC")
 
     return render(request, 'problem_list.html', {
         'problems': problems,
         'problems_neos': problems_neos,
         'problems_gurobi': problems_gurobi,
+        'problems_cbc': problems_cbc,
         'solver': solver
     })
 

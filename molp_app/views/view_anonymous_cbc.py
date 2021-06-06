@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
-from molp_app.models import UserProblem
+from molp_app.models import Problem
 from molp_app.utilities.file_helper import *
 from molp_app.utilities.parse_gurobi_multi_lp import *
 
@@ -14,9 +14,8 @@ import time
 import numpy as np
 
 
-@login_required
-def submit_user_cbc_problem(request, pk):
-    problem = UserProblem.objects.get(pk=pk)
+def submit_cbc_problem(request, pk):
+    problem = Problem.objects.get(pk=pk)
     slvr = problem.solver
 
     if request.method == 'POST':
@@ -86,7 +85,7 @@ def submit_user_cbc_problem(request, pk):
 
         save_files('chebknap', '/problems/chebyshev/', 'lp', 'chebyshev', problem, ch)
 
-        problems = UserProblem.objects.filter(user=request.user)
+        problems = Problem.objects.all()
         problems_neos = problems.filter(solver="NEOS")
         problems_gurobi = problems.filter(solver="Gurobi")
         problems_cbc = problems.filter(solver="CBC")
