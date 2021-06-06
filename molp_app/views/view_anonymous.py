@@ -5,7 +5,7 @@ from django.core.files.base import ContentFile
 from django.conf import settings
 
 from .view_anonymous_gurobi import create_gurobi_problem
-from ..utilities.file_helper import read_txt, save_files
+from ..utilities.file_helper import read_txt, save_files, get_context
 
 try:
     import xmlrpc.client as xmlrpclib
@@ -17,23 +17,15 @@ from django.shortcuts import render, redirect
 from ..forms import ProblemForm, ParametersForm
 from ..models import Problem, ProblemParameters
 
-from gurobipy import os
-
+# from gurobipy import os
+import os
 
 # optimization
 # anonymous user
 def problem_list(request):
-    problems = Problem.objects.all()
-    problems_neos = Problem.objects.filter(solver="NEOS")
-    problems_gurobi = Problem.objects.filter(solver="Gurobi")
-    problems_cbc = Problem.objects.filter(solver="CBC")
+    context = get_context()
 
-    return render(request, 'problem_list.html', {
-        'problems': problems,
-        'problems_neos': problems_neos,
-        'problems_gurobi': problems_gurobi,
-        'problems_cbc': problems_cbc,
-    })
+    return render(request, 'problem_list.html', context)
 
 
 def upload_problem(request):
@@ -51,10 +43,6 @@ def upload_problem(request):
 
 
 def upload_problem_parameters(request):
-    problems = Problem.objects.all()
-    problems_neos = problems.filter(solver="NEOS")
-    problems_gurobi = problems.filter(solver="Gurobi")
-    problems_cbc = Problem.objects.filter(solver="CBC")
 
     if request.method == 'POST':
         problem_form = ProblemForm(request.POST, request.FILES)
@@ -84,13 +72,10 @@ def upload_problem_parameters(request):
                 # params.save()
                 p.parameters.add(params)
 
-            return render(request, 'problem_list.html', {
-                'problems': problems,
-                'problems_neos': problems_neos,
-                'problems_gurobi': problems_gurobi,
-                'problems_cbc': problems_cbc,
-                'solver': solver
-            })
+            context = get_context()
+            context.update({'solver': solver})
+
+            return render(request, 'problem_list.html', context)
     else:
         problem_form = ProblemForm()
         parameters_form = ParametersForm()
@@ -152,18 +137,10 @@ def submit_problem(request, pk):
 
         print('problem submitted %s' % xmlfile.name)
 
-    problems = Problem.objects.all()
-    problems_neos = Problem.objects.filter(solver="NEOS")
-    problems_gurobi = Problem.objects.filter(solver="Gurobi")
-    problems_cbc = Problem.objects.filter(solver="CBC")
+    context = get_context()
+    context.update({'solver': solver})
 
-    return render(request, 'problem_list.html', {
-        'problems': problems,
-        'problems_neos': problems_neos,
-        'problems_gurobi': problems_gurobi,
-        'problems_cbc': problems_cbc,
-        'solver': solver,
-    })
+    return render(request, 'problem_list.html', context)
 
 
 def status_problem(request, pk):
@@ -190,18 +167,10 @@ def status_problem(request, pk):
             sys.stdout.write("Job number = %d\nJob password = %s\n" % (jobNumber, password))
             sys.stdout.write("status = %s\n" % status)
 
-    problems = Problem.objects.all()
-    problems_neos = Problem.objects.filter(solver="NEOS")
-    problems_gurobi = Problem.objects.filter(solver="Gurobi")
-    problems_cbc = Problem.objects.filter(solver="CBC")
+    context = get_context()
+    context.update({'solver': solver})
 
-    return render(request, 'problem_list.html', {
-        'problems': problems,
-        'problems_neos': problems_neos,
-        'problems_gurobi': problems_gurobi,
-        'problems_cbc': problems_cbc,
-        'solver': solver
-    })
+    return render(request, 'problem_list.html', context)
 
 
 def read_result(request, pk):
@@ -231,18 +200,10 @@ def read_result(request, pk):
         sys.stdout.write(msg.data.decode())
         f.save(new_name, ContentFile(msg.data.decode()))
 
-    problems = Problem.objects.all()
-    problems_neos = Problem.objects.filter(solver="NEOS")
-    problems_gurobi = Problem.objects.filter(solver="Gurobi")
-    problems_cbc = Problem.objects.filter(solver="CBC")
+    context = get_context()
+    context.update({'solver': solver})
 
-    return render(request, 'problem_list.html', {
-        'problems': problems,
-        'problems_neos': problems_neos,
-        'problems_gurobi': problems_gurobi,
-        'problems_cbc': problems_cbc,
-        'solver': solver,
-    })
+    return render(request, 'problem_list.html', context)
 
 
 def delete_problem(request, pk):
@@ -255,18 +216,10 @@ def delete_problem(request, pk):
 
         problem.delete()
 
-    problems = Problem.objects.all()
-    problems_neos = problems.filter(solver="NEOS")
-    problems_gurobi = problems.filter(solver="Gurobi")
-    problems_cbc = Problem.objects.filter(solver="CBC")
+    context = get_context()
+    context.update({'solver': solver})
 
-    return render(request, 'problem_list.html', {
-        'problems': problems,
-        'problems_neos': problems_neos,
-        'problems_gurobi': problems_gurobi,
-        'problems_cbc': problems_cbc,
-        'solver': solver
-    })
+    return render(request, 'problem_list.html', context)
 
 
 def update_problem(request, pk):

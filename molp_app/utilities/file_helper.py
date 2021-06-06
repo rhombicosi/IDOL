@@ -7,7 +7,7 @@ from django.core.files import File
 
 from datetime import datetime
 
-from molp_app.models import Problem
+from molp_app.models import Problem, UserProblem
 
 
 def read_txt(path, file):
@@ -85,3 +85,19 @@ def get_context():
     }
 
     return context
+
+
+def get_user_context(request):
+    problems = UserProblem.objects.filter(user=request.user)
+    problems_neos = problems.filter(solver="NEOS")
+    problems_gurobi = problems.filter(solver="Gurobi")
+    problems_cbc = problems.filter(solver="CBC")
+
+    user_context = {
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_gurobi': problems_gurobi,
+        'problems_cbc': problems_cbc,
+    }
+
+    return user_context

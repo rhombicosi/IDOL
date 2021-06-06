@@ -1,15 +1,15 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import re_path, path, include
-from .views import view_common, view_anonymous, view_user, view_user_gurobi, view_user_problem_gurobi, \
-    view_anonymous_gurobi, view_user_cbc, view_anonymous_cbc
+from .views import view_common, view_anonymous, view_user, view_user_problem_gurobi, \
+    view_user_cbc, view_anonymous_cbc
 
 urlpatterns = [
     re_path(r'^$', view_common.home, name='home'),
     re_path(r'^problems/$', view_anonymous.problem_list, name='problem_list'),
     re_path(r'^problems/upload/$', view_anonymous.upload_problem_parameters, name='upload_problem_parameters'),
     path('problems/submit/<int:pk>/', view_anonymous.submit_problem, name='submit_problem'),
-    path('problems/submit_gurobi/<int:pk>/', view_anonymous_gurobi.submit_gurobi_problem, name='submit_gurobi_problem'),
+    # path('problems/submit_gurobi/<int:pk>/', view_anonymous_gurobi.submit_gurobi_problem, name='submit_gurobi_problem'),
     path('problems/submit_cbc/<int:pk>/', view_anonymous_cbc.submit_cbc_problem, name='submit_cbc_problem'),
 
 
@@ -20,7 +20,7 @@ urlpatterns = [
     re_path(r'^user_problems/$', view_user.user_problems, name='user_problems'),
     re_path(r'^user_problems/upload/$', view_user.upload_user_problem_parameters, name='upload_user_problem_parameters'),
     path('user_problems/submit_user/<int:pk>/', view_user.submit_user_problem, name='submit_user_problem'),
-    path('user_problems/submit_user_gurobi/<int:pk>/', view_user_gurobi.submit_user_gurobi_problem, name='submit_user_gurobi_problem'),
+    # path('user_problems/submit_user_gurobi/<int:pk>/', view_user_gurobi.submit_user_gurobi_problem, name='submit_user_gurobi_problem'),
 
     path('user_problems/submit_user_cbc/<int:pk>/', view_user_cbc.submit_user_cbc_problem, name='submit_user_cbc_problem'),
 

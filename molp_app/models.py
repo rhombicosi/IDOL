@@ -3,24 +3,22 @@ from django.contrib.auth.models import User
 
 
 class Problem(models.Model):
-    GUROBI = 'Gurobi'
     NEOS = 'NEOS'
     CBC = 'CBC'
     SOLVERS = (
-        (GUROBI, 'Gurobi'),
         (NEOS, 'NEOS'),
         (CBC, 'CBC'),
     )
     title = models.CharField(max_length=100)
     xml = models.FileField(upload_to='problems/xmls/', verbose_name='input file')
-    solver = models.CharField(max_length=10, choices=SOLVERS, default=GUROBI)
+    solver = models.CharField(max_length=10, choices=SOLVERS, default=CBC)
 
     # NEOS fields
     jobNumber = models.IntegerField(null=True, blank=True)
     password = models.CharField(max_length=50, null=True, blank=True)
     status = models.CharField(max_length=50, null=True, blank=True)
 
-    # Gurobi fields
+    # CBC fields
     chebyshev = models.FileField(upload_to='problems/chebyshev/', blank=True)
 
     # common fields
@@ -61,28 +59,26 @@ class ProblemParameters(models.Model):
 
 
 class UserProblem(models.Model):
-    GUROBI = 'Gurobi'
+
     NEOS = 'NEOS'
     CBC = 'CBC'
     SOLVERS = (
-        (GUROBI, 'Gurobi'),
         (NEOS, 'NEOS'),
         (CBC, 'CBC')
     )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="problems", null=True)
     title = models.CharField(max_length=100)
     xml = models.FileField(upload_to='problems/xmls/', verbose_name='input file')
-    solver = models.CharField(max_length=10, choices=SOLVERS, default=GUROBI)
+    solver = models.CharField(max_length=10, choices=SOLVERS, default=CBC)
 
     # NEOS fields
     jobNumber = models.IntegerField(null=True, blank=True)
     password = models.CharField(max_length=50, null=True, blank=True)
     status = models.CharField(max_length=50, null=True, blank=True)
 
-    # Gurobi fields
-    chebyshev = models.FileField(upload_to='problems/chebyshev/', blank=True)
-
     # CBC fields
+    chebyshev = models.FileField(upload_to='problems/chebyshev/', blank=True)
     txt = models.FileField(upload_to='problems/txt/', blank=True)
 
     # common fields

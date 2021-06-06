@@ -85,15 +85,7 @@ def submit_cbc_problem(request, pk):
 
         save_files('chebknap', '/problems/chebyshev/', 'lp', 'chebyshev', problem, ch)
 
-        problems = Problem.objects.all()
-        problems_neos = problems.filter(solver="NEOS")
-        problems_gurobi = problems.filter(solver="Gurobi")
-        problems_cbc = problems.filter(solver="CBC")
+        context = get_context()
+        context.update({'solver': slvr})
 
-    return render(request, 'user_problems.html', {
-        'problems': problems,
-        'problems_neos': problems_neos,
-        'problems_gurobi': problems_gurobi,
-        'problems_cbc': problems_cbc,
-        'solver': slvr,
-    })
+    return render(request, 'user_problems.html', context)

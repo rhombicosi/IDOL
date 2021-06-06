@@ -86,15 +86,7 @@ def submit_user_cbc_problem(request, pk):
 
         save_files('chebknap', '/problems/chebyshev/', 'lp', 'chebyshev', problem, ch)
 
-        problems = UserProblem.objects.filter(user=request.user)
-        problems_neos = problems.filter(solver="NEOS")
-        problems_gurobi = problems.filter(solver="Gurobi")
-        problems_cbc = problems.filter(solver="CBC")
+        user_context = get_user_context(request)
+        user_context.update({'solver': slvr})
 
-    return render(request, 'user_problems.html', {
-        'problems': problems,
-        'problems_neos': problems_neos,
-        'problems_gurobi': problems_gurobi,
-        'problems_cbc': problems_cbc,
-        'solver': slvr,
-    })
+    return render(request, 'user_problems.html', user_context)
