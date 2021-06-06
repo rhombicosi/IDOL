@@ -4,7 +4,7 @@ import sys
 from django.core.files.base import ContentFile
 from django.conf import settings
 
-from .view_anonymous_gurobi import create_gurobi_problem
+# from .view_anonymous_gurobi import create_gurobi_problem
 from ..utilities.file_helper import read_txt, save_files, get_context
 
 try:
@@ -244,8 +244,9 @@ def update_problem(request, pk):
                 w_name = os.path.basename(params.weights.path)
                 weights = read_txt(w_path, w_name)
 
-                new_p = create_gurobi_problem(pk, weights)
-                new_p.parameters.add(params)
+                #TODO: change problem update functionality
+                # new_p = create_gurobi_problem(pk, weights)
+                # new_p.parameters.add(params)
 
             return redirect('problem_list')
     else:

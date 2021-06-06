@@ -1,8 +1,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import re_path, path, include
-from .views import view_common, view_anonymous, view_user, view_user_problem_gurobi, \
-    view_user_cbc, view_anonymous_cbc
+from .views import view_common, view_anonymous, view_user, view_user_cbc, view_anonymous_cbc
 
 urlpatterns = [
     re_path(r'^$', view_common.home, name='home'),
@@ -30,7 +29,7 @@ urlpatterns = [
     path('user_problems/delete_user/<int:pk>/', view_user.delete_user_problem, name='delete_user_problem'),
     path('accounts/', include('django.contrib.auth.urls')),
 
-    path('problem/<int:pk>/', view_user_problem_gurobi.user_problem, name='user_problem'),
+    # path('problem/<int:pk>/', view_user_problem_gurobi.user_problem, name='user_problem'),
     path('problem/update_user/<int:pk>/', view_user.update_user_problem, name='update_user_problem'),
     path('problem/update/<int:pk>/', view_anonymous.update_problem, name='update_problem'),
 ]

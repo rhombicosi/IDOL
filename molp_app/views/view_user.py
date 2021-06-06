@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 
-from .view_user_gurobi import create_user_gurobi_problem
+# from .view_user_gurobi import create_user_gurobi_problem
 from molp_app.utilities.file_helper import read_txt, save_files, get_user_context
 
 try:
@@ -250,8 +250,9 @@ def update_user_problem(request, pk):
                 w_name = os.path.basename(params.weights.path)
                 weights = read_txt(w_path, w_name)
 
-                new_p = create_user_gurobi_problem(request, pk, weights)
-                new_p.parameters.add(params)
+                # TODO: change problem update functionality
+                # new_p = create_user_gurobi_problem(request, pk, weights)
+                # new_p.parameters.add(params)
 
             # TODO: update problem reference
 
