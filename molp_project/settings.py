@@ -164,6 +164,7 @@ Q_CLUSTER = {
         'password': 'p617e57b95ca20833d8a5d5828adbab0958adc4098e53a50dcf1c5be528065d74',
         'db': 0, }
 }
+DISABLE_COLLECTSTATIC = 1
 
 django_heroku.settings(locals())
 
