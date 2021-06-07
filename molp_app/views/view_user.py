@@ -18,8 +18,8 @@ from django.shortcuts import render, redirect
 from molp_app.forms import ProblemForm, ParametersForm
 from molp_app.models import UserProblem, UserProblemParameters
 
-from gurobipy import os
-
+# from gurobipy import os
+import os
 
 # registered user
 @login_required

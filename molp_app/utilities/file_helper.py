@@ -1,7 +1,7 @@
 import time
 from pathlib import Path
-from gurobipy import *
-
+# from gurobipy import *
+import os
 from django.conf import settings
 from django.core.files import File
 
