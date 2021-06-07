@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'crispy_forms',
     'molp_app',
+    'django_q',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -146,6 +147,23 @@ LOGOUT_REDIRECT_URL = 'home'
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+Q_CLUSTER = {
+    'name': 'django_q_django',
+    'workers': 8,
+    'recycle': 500,
+    'timeout': 60,
+    'compress': True,
+    'save_limit': 250,
+    'queue_limit': 500,
+    'cpu_affinity': 1,
+    'label': 'Django Q',
+    'redis': {
+        'host': 'ec2-54-172-224-248.compute-1.amazonaws.com',
+        'port': 21629,
+        'password': 'p617e57b95ca20833d8a5d5828adbab0958adc4098e53a50dcf1c5be528065d74',
+        'db': 0, }
+}
 
 django_heroku.settings(locals())
 

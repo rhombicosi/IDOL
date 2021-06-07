@@ -1,4 +1,4 @@
-from gurobipy import *
+from mip import *
 import argparse
 import django
 django.setup()
@@ -32,9 +32,13 @@ def main(argv):
     print('Input file is {}'.format(inputfile))
     print('Output file is {}'.format(outputfile))
     print('Problem key is {}'.format(problemkey))
-    model = read(inputfile)
-    model.Params.TIME_LIMIT = constants.TIMELIMIT
-    model.optimize()
+
+    # model = read(inputfile)
+    model = Model(solver_name=CBC)
+    model.read(inputfile)
+    # model.Params.TIME_LIMIT = constants.TIMELIMIT
+    # model.optimize()
+    model.optimize(max_seconds=100)
     problem = Problem.objects.get(pk=problemkey)
 
     # save solution into .sol file
