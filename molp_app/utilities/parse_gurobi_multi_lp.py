@@ -1,3 +1,5 @@
+import errno
+
 from mip import *
 import numpy as np
 
@@ -23,6 +25,18 @@ def parse_gurobi(problem):
     src = lppath + lpfile
 
     print(src)
+
+    # Creating a txt folder in media directory
+    new_dir_path = os.path.join(settings.MEDIA_ROOT + '/problems/', 'txt')
+    try:
+        os.makedirs(new_dir_path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            # directory already exists
+            pass
+        else:
+            print(e)
+
     dst = settings.MEDIA_ROOT + '/problems/txt/' + pre + extension
 
     copyfile(src, dst)
