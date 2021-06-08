@@ -13,6 +13,7 @@ from django_q.tasks import async_task
 
 
 def submit_cbc(request, pk):
+    print("Task run!!!")
     problem = Problem.objects.get(pk=pk)
     slvr = problem.solver
 
@@ -37,7 +38,7 @@ def submit_cbc(request, pk):
             print('model has {} vars, {} constraints and {} nzs'.format(m.num_cols, m.num_rows, m.num_nz))
 
             m.max_gap = 0.25
-            status = m.optimize(max_seconds=100)
+            status = m.optimize(max_seconds=10)
 
             if status == OptimizationStatus.OPTIMAL:
                 print('optimal solution cost {} found'.format(m.objective_value))
@@ -94,7 +95,7 @@ def submit_cbc_problem(request, pk):
     problem = Problem.objects.get(pk=pk)
     slvr = problem.solver
     # json_payload = {"message": "chebyshev scalarization obtained"}
-    print('async task has started!!!')
+
     async_task(submit_cbc(request, pk))
 
     # return JsonResponse(json_payload)
