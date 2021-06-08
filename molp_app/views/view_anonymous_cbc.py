@@ -94,6 +94,7 @@ def submit_cbc_problem(request, pk):
     problem = Problem.objects.get(pk=pk)
     slvr = problem.solver
     # json_payload = {"message": "chebyshev scalarization obtained"}
+    print('async task has started!!!')
     async_task(submit_cbc(request, pk))
 
     # return JsonResponse(json_payload)
