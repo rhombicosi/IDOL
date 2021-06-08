@@ -1,3 +1,4 @@
+import errno
 import time
 from pathlib import Path
 # from gurobipy import *
@@ -42,6 +43,17 @@ def save_files(filename, filepath, extension, field, entity, model=None, content
     timestr = datetime.now()
     timestr = str(timestr.microsecond)
     temp_path = settings.MEDIA_ROOT + filepath + filename + timestr + '_temp.' + extension
+
+    # Creating a txt folder in media directory
+    new_dir_path = os.path.join(settings.MEDIA_ROOT + '/problems/', 'chebyshev')
+    try:
+        os.makedirs(new_dir_path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            # directory already exists
+            pass
+        else:
+            print(e)
 
     # write model into temporary file with gurobi
     if field == 'chebyshev' or field == 'result' or field == 'xml':
