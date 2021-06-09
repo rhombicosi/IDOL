@@ -34,7 +34,7 @@ def submit_cbc(problem):
         print('model has {} vars, {} constraints and {} nzs'.format(m.num_cols, m.num_rows, m.num_nz))
 
         m.max_gap = 0.25
-        status = m.optimize(max_seconds=100)
+        status = m.optimize(max_seconds=90)
 
         if status == OptimizationStatus.OPTIMAL:
             print('optimal solution cost {} found'.format(m.objective_value))
