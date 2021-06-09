@@ -159,7 +159,7 @@ Q_CLUSTER = {
     'queue_limit': 500,
     'cpu_affinity': 1,
     'label': 'Django Q',
-    'redis': 'redis://:p617e57b95ca20833d8a5d5828adbab0958adc4098e53a50dcf1c5be528065d74@ec2-54-172-224-248.compute-1.amazonaws.com:21630'
+    'redis': 'redis://:p617e57b95ca20833d8a5d5828adbab0958adc4098e53a50dcf1c5be528065d74@ec2-54-172-224-248.compute-1.amazonaws.com:21629'
 }
 
 django_heroku.settings(locals())
