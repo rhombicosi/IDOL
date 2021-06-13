@@ -254,7 +254,10 @@ def generate_chebyshev(problem):
     temp_chebyshev = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="chebyshev_" + timestr)
     ch.write(temp_chebyshev.name)
 
-    dst = temp_chebyshev.name.split("\\")[-1]
+    # local
+    # dst = temp_chebyshev.name.split("\\")[-1]
+    # heroku
+    dst = temp_chebyshev.name.split("/")[-1]
     print(temp_chebyshev.name)
     temp_chebyshev.flush()
 
