@@ -149,9 +149,11 @@ def parse_gurobi_url(problem):
         # f2.seek(0)
         # f3.seek(0)
 
+        f1.flush()
         problem_temp_files.append(f1)
 
         data = open(problem_temp_files[obj].name, 'r')
+        print(problem_temp_files[obj].name)
         for l in data.readlines():
             print(l)
 
@@ -175,9 +177,6 @@ def parse_gurobi_url(problem):
     #     data = open(problem_temp_files[obj].name, 'r')
     #     for l in data.readlines():
     #         print(l)
-
-    # # remove temporary constraints file
-    # os.remove(cnstr_txt_path)
 
     return timestr, NumOfObj, problem_temp_files
 
