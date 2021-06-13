@@ -111,14 +111,6 @@ def parse_gurobi_url(problem):
         f.write('\n')
         # f.close()
 
-    for obj in range(NumOfObj):
-        print(obj_temp_files[obj].name)
-        obj_temp_files[obj].flush()
-        obj_temp_files[obj].seek(0)
-        data = open(obj_temp_files[obj].name, 'r')
-        for l in data.readlines():
-            print(l)
-
     # create file with constraints and variables
     temp_constr_file = NamedTemporaryFile(mode='wt', suffix=".txt", prefix="new_constrs_" + str(obj) + "_" + timestr)
 
@@ -133,12 +125,15 @@ def parse_gurobi_url(problem):
     for obj in range(NumOfObj):
         # obj_lp_path = settings.MEDIA_ROOT + "/problems/txt/new_problem_" + str(obj) + "_" + timestr + ".lp"
         obj_lp_path = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="new_problem_" + str(obj) + "_" + timestr)
+        obj_lp_path.flush()
         f1 = open(obj_lp_path.name, 'a+')
         # obj_txt_path = settings.MEDIA_ROOT + "/problems/txt/new_objectives_" + str(obj) + "_" + timestr + ".txt"
 
+        obj_temp_files[obj].flush()
         obj_temp_files[obj].seek(0)
         f2 = open(obj_temp_files[obj].name, 'r')
 
+        temp_constr_file.flush()
         temp_constr_file.seek(0)
         f3 = open(temp_constr_file.name, 'r')
 
@@ -166,13 +161,13 @@ def parse_gurobi_url(problem):
     # for l in data.readlines():
     #     print(l)
 
-    # for obj in range(NumOfObj):
-    #     print(problem_temp_files[obj].name)
-    #     problem_temp_files[obj].flush()
-    #     problem_temp_files[obj].seek(0)
-    #     data = open(problem_temp_files[obj].name, 'r')
-    #     for l in data.readlines():
-    #         print(l)
+    for obj in range(NumOfObj):
+        print(problem_temp_files[obj].name)
+        problem_temp_files[obj].flush()
+        problem_temp_files[obj].seek(0)
+        data = open(problem_temp_files[obj].name, 'r')
+        for l in data.readlines():
+            print(l)
 
     # # remove temporary constraints file
     # os.remove(cnstr_txt_path)
