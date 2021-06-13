@@ -125,7 +125,7 @@ def parse_gurobi_url(problem):
     for obj in range(NumOfObj):
         # obj_lp_path = settings.MEDIA_ROOT + "/problems/txt/new_problem_" + str(obj) + "_" + timestr + ".lp"
         obj_lp_path = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="new_problem_" + str(obj) + "_" + timestr)
-        obj_lp_path.flush()
+
         f1 = open(obj_lp_path.name, 'a+')
         # obj_txt_path = settings.MEDIA_ROOT + "/problems/txt/new_objectives_" + str(obj) + "_" + timestr + ".txt"
 
@@ -138,13 +138,15 @@ def parse_gurobi_url(problem):
         f3 = open(temp_constr_file.name, 'r')
 
         # appending the contents of the second file to the first file
+        f2.flush()
         f1.write(f2.read())
+        f3.flush()
         f1.write(f3.read())
 
         # relocating the cursor of the files at the beginning
-        f1.seek(0)
-        f2.seek(0)
-        f3.seek(0)
+        # f1.seek(0)
+        # f2.seek(0)
+        # f3.seek(0)
 
         problem_temp_files.append(f1)
 

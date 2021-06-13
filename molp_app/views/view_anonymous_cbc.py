@@ -34,7 +34,7 @@ def submit_cbc(problem):
         obj_lp_path = problem_temp_files[obj].name
 
         print(obj_lp_path)
-        obj_lp_path.flush()
+        problem_temp_files[obj].flush()
         m.read(obj_lp_path)
         print('model has {} vars, {} constraints and {} nzs'.format(m.num_cols, m.num_rows, m.num_nz))
 
