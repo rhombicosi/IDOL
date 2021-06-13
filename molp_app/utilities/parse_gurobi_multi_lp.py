@@ -111,6 +111,14 @@ def parse_gurobi_url(problem):
         f.write('\n')
         # f.close()
 
+    for obj in range(NumOfObj):
+        print(obj_temp_files[obj].name)
+        obj_temp_files[obj].flush()
+        obj_temp_files[obj].seek(0)
+        data = open(obj_temp_files[obj].name, 'r')
+        for l in data.readlines():
+            print(l)
+
     # create file with constraints and variables
     temp_constr_file = NamedTemporaryFile(mode='wt', suffix=".txt", prefix="new_constrs_" + str(obj) + "_" + timestr)
 
