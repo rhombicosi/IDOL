@@ -152,14 +152,15 @@ def parse_gurobi_url(problem):
         # f1.flush()
         problem_temp_files.append(f1)
 
-        # data = open(problem_temp_files[obj].name, 'r')
-        # print(problem_temp_files[obj].name)
-        # for l in data.readlines():
-        #     print(l)
+        data = open(problem_temp_files[obj].name, 'r')
+        print('this is temporary problem file')
+        print(problem_temp_files[obj].name)
+        for l in data.readlines():
+            print(l)
 
         # f1.close()
-        f2.close()
-        f3.close()
+        # f2.close()
+        # f3.close()
 
         # remove temporary objective files
         # os.remove(obj_txt_path)
