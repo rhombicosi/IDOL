@@ -128,6 +128,7 @@ def parse_gurobi_url(problem):
 
         obj_lp_path.flush()
         f1 = open(obj_lp_path.name, 'a+')
+        problem_temp_files.append(f1)
         # obj_txt_path = settings.MEDIA_ROOT + "/problems/txt/new_objectives_" + str(obj) + "_" + timestr + ".txt"
 
         obj_temp_files[obj].flush()
@@ -150,13 +151,13 @@ def parse_gurobi_url(problem):
         # f3.seek(0)
 
         # f1.flush()
-        problem_temp_files.append(f1)
+        # problem_temp_files.append(f1)
 
-        data = open(problem_temp_files[obj].name, 'r')
-        print('this is temporary problem file')
-        print(problem_temp_files[obj].name)
-        for l in data.readlines():
-            print(l)
+        # data = open(problem_temp_files[obj].name, 'r')
+        # print('this is temporary problem file')
+        # print(problem_temp_files[obj].name)
+        # for l in data.readlines():
+        #     print(l)
 
         # f1.close()
         # f2.close()
