@@ -182,6 +182,7 @@ def parse_gurobi_url(problem):
 
 
 def generate_chebyshev(problem):
+    print('Generate Chebyshev!!!')
     timestr, NumOfObj, problem_temp_files = parse_gurobi_url(problem)
 
     f = {}
