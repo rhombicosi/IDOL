@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'molp_app',
     'django_q',
+    'storages',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -138,7 +139,6 @@ STATICFILES_DIRS = [
 ]
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'molp_app/media')
-
 MEDIA_URL = '/media/'
 
 LOGIN_REDIRECT_URL = 'home'
@@ -161,6 +161,25 @@ Q_CLUSTER = {
     'label': 'Django Q',
     'redis': 'redis://:p617e57b95ca20833d8a5d5828adbab0958adc4098e53a50dcf1c5be528065d74@ec2-54-172-224-248.compute-1.amazonaws.com:21629'
 }
+
+AWS_ACCESS_KEY_ID = 'AKIAZDQTB76EL5MHCNTE'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'molpcbc'
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+AWS_DEFAULT_ACL = 'public-read'
+AWS_LOCATION = 'static'
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'molp_project/static'),
+]
+
+STATIC_URL = 'https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+DEFAULT_FILE_STORAGE = 'molp_project.storage_backends.MediaStorage'
 
 django_heroku.settings(locals())
 

@@ -20,7 +20,7 @@ class Problem(models.Model):
 
     # CBC fields
     chebyshev = models.FileField(upload_to='problems/chebyshev/', blank=True)
-
+    txt = models.FileField(upload_to='problems/txt/', blank=True)
     # common fields
     result = models.FileField(upload_to='problems/solutions/', blank=True)
 

@@ -11,11 +11,13 @@ import numpy as np
 from django.http import JsonResponse
 from django_q.tasks import async_task
 
+from django.core.files import File
+
 
 def submit_cbc(problem):
     print("Task run!!!")
 
-    timestr, NumOfObj = parse_gurobi(problem)
+    timestr, NumOfObj, problem_temp_files = parse_gurobi_url(problem)
 
     f = {}
     weights = []
@@ -27,7 +29,9 @@ def submit_cbc(problem):
 
         m = Model(solver_name=CBC)
         models[obj] = m
-        obj_lp_path = settings.MEDIA_ROOT + "/problems/txt/new_problem_" + str(obj) + "_" + timestr + ".lp"
+        # obj_lp_path = settings.MEDIA_ROOT + "/problems/txt/new_problem_" + str(obj) + "_" + timestr + ".lp"
+        # obj_lp_path = "problems/txt/new_problem_" + str(obj) + "_" + timestr + ".lp"
+        obj_lp_path = problem_temp_files[obj].name
 
         print(obj_lp_path)
         m.read(obj_lp_path)
@@ -46,7 +50,7 @@ def submit_cbc(problem):
             print('no feasible solution found, lower bound is: {}'.format(m.objective_bound))
             ystar[obj] = m.objective_bound
 
-        os.remove(obj_lp_path)
+        # os.remove(obj_lp_path)
 
     # chebyshev scalarization
     ch = Model(sense=MINIMIZE, solver_name=CBC)
@@ -79,7 +83,25 @@ def submit_cbc(problem):
 
     # ch.write(settings.MEDIA_ROOT + "/problems/chebyshev/chebyshev_" + timestr + ".lp")
 
-    save_files('chebknap', '/problems/chebyshev/', 'lp', 'chebyshev', problem, ch)
+    temp_chebyshev = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="chebyshev_" + timestr)
+    ch.write(temp_chebyshev.name)
+
+
+    dst = temp_chebyshev.name.split("\\")[-1]
+    print(temp_chebyshev.name)
+    temp_chebyshev.flush()
+
+    f = NamedTemporaryFile()
+    temp_chebyshev.seek(0)
+    data = open(temp_chebyshev.name, 'r')
+    for li in data.readlines():
+        f.write(bytes(li, 'utf-8'))
+    f.flush()
+    problem.chebyshev = File(f, name=dst)
+    problem.save()
+    # problem.chebyshev = files.File(chebyshev, name=chebyshev.name)
+    # problem.save()
+    # save_files('chebknap', '/problems/chebyshev/', 'lp', 'chebyshev', problem, ch)
 
     #     context = get_context()
     #     context.update({'solver': slvr})
