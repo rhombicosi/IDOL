@@ -15,23 +15,21 @@ import os
 import django_heroku
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from decouple import config, Csv
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'zz8&c(^web-v8t27t6%)tp=i)s-s@cb9cae**q=nnbkx+g6isj'
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', cast=bool)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -159,12 +157,12 @@ Q_CLUSTER = {
     'queue_limit': 500,
     'cpu_affinity': 1,
     'label': 'Django Q',
-    'redis': 'redis://:p617e57b95ca20833d8a5d5828adbab0958adc4098e53a50dcf1c5be528065d74@ec2-54-172-224-248.compute-1.amazonaws.com:21629'
+    'redis': config('redis')
 }
 
-AWS_ACCESS_KEY_ID = 'AKIAZDQTB76EL5MHCNTE'
-AWS_SECRET_ACCESS_KEY = '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'
-AWS_STORAGE_BUCKET_NAME = 'molpcbc'
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',

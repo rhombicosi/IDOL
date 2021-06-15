@@ -1,14 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from molp_app.utilities.file_helper import *
 from molp_app.utilities.parse_gurobi_multi_lp import *
 
-import os
-
 from mip import *
 import numpy as np
 
-from django.http import JsonResponse
 from django_q.tasks import async_task
 
 from django.core.files import File
@@ -16,8 +13,6 @@ from django.core.files import File
 
 def submit_cbc(problem):
     print("Task run!!!")
-
-    # generate_chebyshev(problem)
 
     timestr, NumOfObj, problem_temp_files = parse_gurobi_url(problem)
 
@@ -31,8 +26,7 @@ def submit_cbc(problem):
 
         m = Model(solver_name=CBC)
         models[obj] = m
-        # obj_lp_path = settings.MEDIA_ROOT + "/problems/txt/new_problem_" + str(obj) + "_" + timestr + ".lp"
-        # obj_lp_path = "problems/txt/new_problem_" + str(obj) + "_" + timestr + ".lp"
+
         obj_lp_path = problem_temp_files[obj].name
 
         print(obj_lp_path)
@@ -52,8 +46,6 @@ def submit_cbc(problem):
         elif status == OptimizationStatus.NO_SOLUTION_FOUND:
             print('no feasible solution found, lower bound is: {}'.format(m.objective_bound))
             ystar[obj] = m.objective_bound
-
-        # os.remove(obj_lp_path)
 
     # chebyshev scalarization
     ch = Model(sense=MINIMIZE, solver_name=CBC)
@@ -84,15 +76,13 @@ def submit_cbc(problem):
         o = m.objective
         ch.add_constr(f[obj] - o == 0, 'f_constr_' + str(obj))
 
-    # ch.write(settings.MEDIA_ROOT + "/problems/chebyshev/chebyshev_" + timestr + ".lp")
-
     temp_chebyshev = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="chebyshev_" + timestr)
     ch.write(temp_chebyshev.name)
 
     # local
-    # dst = temp_chebyshev.name.split("\\")[-1]
+    dst = temp_chebyshev.name.split("\\")[-1]
     # heroku
-    dst = temp_chebyshev.name.split("/")[-1]
+    # dst = temp_chebyshev.name.split("/")[-1]
     print(temp_chebyshev.name)
     temp_chebyshev.flush()
 
@@ -104,14 +94,21 @@ def submit_cbc(problem):
     f.flush()
     problem.chebyshev = File(f, name=dst)
     problem.save()
-    # problem.chebyshev = files.File(chebyshev, name=chebyshev.name)
-    # problem.save()
-    # save_files('chebknap', '/problems/chebyshev/', 'lp', 'chebyshev', problem, ch)
 
-    #     context = get_context()
-    #     context.update({'solver': slvr})
-    #
-    # return render(request, 'user_problems.html', context)
+    return redirect('problem_list')
+
+
+def reload_page(task, request):
+    print(task.result)
+    # return redirect(request.META['HTTP_REFERER'])
+
+    if task.success:
+        problem = task.result
+        slvr = problem.solver
+
+        context = get_context()
+        context.update({'solver': slvr})
+        return render(request, 'problem_list.html', context)
 
 
 def submit_cbc_problem(request, pk):
@@ -119,10 +116,9 @@ def submit_cbc_problem(request, pk):
     slvr = problem.solver
 
     if request.method == 'POST':
-
         async_task(submit_cbc, problem)
 
-    # return JsonResponse(json_payload)
+    print('sync!!!')
     context = get_context()
     context.update({'solver': slvr})
     return render(request, 'problem_list.html', context)

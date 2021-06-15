@@ -1,9 +1,6 @@
 import errno
 
-from urllib.request import urlopen
-
 import requests
-from django.core.files.storage import default_storage
 from mip import *
 import numpy as np
 
@@ -32,6 +29,7 @@ def read_url(url):
     return some_temp_file
 
 
+# working with cloud storage
 def parse_gurobi_url(problem):
 
     lpurl = problem.xml.url
@@ -57,13 +55,9 @@ def parse_gurobi_url(problem):
 
     for line in range(len(lines)):
         lines[line] = lines[line].decode("utf-8")
-        # print(Lines[line])
 
     # parse multiobjective Gurobi format
     keywords = {'st': ['subject to', 'st', 's.t.'], 'sns': ['max', 'min']}
-
-    # txt = open(dst, 'r')
-    # Lines = txt.readlines()
 
     count = 0
     st_line = 0
@@ -101,7 +95,7 @@ def parse_gurobi_url(problem):
     for obj in range(NumOfObj):
         f = NamedTemporaryFile(mode='wt', suffix=".txt", prefix="new_objectives_" + str(obj) + "_" + timestr)
         obj_temp_files.append(f)
-        # f = open(settings.MEDIA_ROOT + "/problems/txt/new_objectives_" + str(obj) + "_" + timestr + ".txt", "a")
+
         if sns == 'max':
             f.write('MAXIMIZE\n')
         else:
@@ -109,7 +103,6 @@ def parse_gurobi_url(problem):
         f.write('Obj' + str(obj) + ':\n')
         f.write(lines[start - 1 + (obj * 2 + 1)])
         f.write('\n')
-        # f.close()
 
     # create file with constraints and variables
     temp_constr_file = NamedTemporaryFile(mode='wt', suffix=".txt", prefix="new_constrs_" + str(obj) + "_" + timestr)
@@ -119,17 +112,13 @@ def parse_gurobi_url(problem):
     # f.close()
 
     # opening first file in append mode and second file in read mode
-    # cnstr_txt_path = settings.MEDIA_ROOT + "/problems/txt/new_constrs" + "_" + timestr + ".txt"
-    # cnstr_txt_path = temp_constr_file.name
     problem_temp_files = []
     for obj in range(NumOfObj):
-        # obj_lp_path = settings.MEDIA_ROOT + "/problems/txt/new_problem_" + str(obj) + "_" + timestr + ".lp"
+
         obj_lp_path = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="new_problem_" + str(obj) + "_" + timestr)
         problem_temp_files.append(obj_lp_path)
         # obj_lp_path.flush()
         f1 = open(obj_lp_path.name, 'a+')
-
-        # obj_txt_path = settings.MEDIA_ROOT + "/problems/txt/new_objectives_" + str(obj) + "_" + timestr + ".txt"
 
         obj_temp_files[obj].flush()
         obj_temp_files[obj].seek(0)
@@ -145,32 +134,7 @@ def parse_gurobi_url(problem):
         # f3.flush()
         f1.write(f3.read())
 
-        # relocating the cursor of the files at the beginning
-        # f1.seek(0)
-        # f2.seek(0)
-        # f3.seek(0)
 
-        # f1.flush()
-        # problem_temp_files.append(f1)
-
-        # data = open(problem_temp_files[obj].name, 'r')
-        # print('this is temporary problem file')
-        # print(problem_temp_files[obj].name)
-        # for l in data.readlines():
-        #     print(l)
-
-        # f1.close()
-        # f2.close()
-        # f3.close()
-
-        # remove temporary objective files
-        # os.remove(obj_txt_path)
-
-    # f.flush()
-    # f.seek(0)
-    # data = open(f.name, 'r')
-    # for l in data.readlines():
-    #     print(l)
 
     # for obj in range(NumOfObj):
     #     print(problem_temp_files[obj].name)
@@ -270,7 +234,7 @@ def generate_chebyshev(problem):
     problem.chebyshev = File(f, name=dst)
     problem.save()
 
-
+# working with files locally
 def parse_gurobi(problem):
     lppath = settings.MEDIA_ROOT + '/problems/xmls/'
 

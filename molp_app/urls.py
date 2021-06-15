@@ -11,7 +11,6 @@ urlpatterns = [
     # path('problems/submit_gurobi/<int:pk>/', view_anonymous_gurobi.submit_gurobi_problem, name='submit_gurobi_problem'),
     path('problems/submit_cbc/<int:pk>/', view_anonymous_cbc.submit_cbc_problem, name='submit_cbc_problem'),
 
-
     path('problems/status/<int:pk>/', view_anonymous.status_problem, name='status_problem'),
     path('problems/result/<int:pk>/', view_anonymous.read_result, name='read_result'),
     path('problems/delete/<int:pk>/', view_anonymous.delete_problem, name='delete_problem'),
