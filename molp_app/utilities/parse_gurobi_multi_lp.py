@@ -15,7 +15,6 @@ from django.core.files.temp import NamedTemporaryFile
 from django.core import files
 from django.core.files import File
 
-
 def read_url(url):
     in_memory_file = requests.get(url, stream=True)
     some_temp_file = NamedTemporaryFile()
@@ -134,21 +133,12 @@ def parse_gurobi_url(problem):
         # f3.flush()
         f1.write(f3.read())
 
-
-
-    # for obj in range(NumOfObj):
-    #     print(problem_temp_files[obj].name)
-    #     problem_temp_files[obj].flush()
-    #     problem_temp_files[obj].seek(0)
-    #     data = open(problem_temp_files[obj].name, 'r')
-    #     for l in data.readlines():
-    #         print(l)
-
     return timestr, NumOfObj, problem_temp_files
 
 
-def generate_chebyshev(problem):
-    print('Generate Chebyshev!!!')
+def submit_cbc(problem):
+    print("Task run!!!")
+
     timestr, NumOfObj, problem_temp_files = parse_gurobi_url(problem)
 
     f = {}
@@ -161,8 +151,7 @@ def generate_chebyshev(problem):
 
         m = Model(solver_name=CBC)
         models[obj] = m
-        # obj_lp_path = settings.MEDIA_ROOT + "/problems/txt/new_problem_" + str(obj) + "_" + timestr + ".lp"
-        # obj_lp_path = "problems/txt/new_problem_" + str(obj) + "_" + timestr + ".lp"
+
         obj_lp_path = problem_temp_files[obj].name
 
         print(obj_lp_path)
@@ -182,8 +171,6 @@ def generate_chebyshev(problem):
         elif status == OptimizationStatus.NO_SOLUTION_FOUND:
             print('no feasible solution found, lower bound is: {}'.format(m.objective_bound))
             ystar[obj] = m.objective_bound
-
-        # os.remove(obj_lp_path)
 
     # chebyshev scalarization
     ch = Model(sense=MINIMIZE, solver_name=CBC)
@@ -209,19 +196,18 @@ def generate_chebyshev(problem):
             'sum{}'.format(i + 1))
 
     for obj in range(NumOfObj):
+
         m = models[obj]
         o = m.objective
         ch.add_constr(f[obj] - o == 0, 'f_constr_' + str(obj))
-
-    # ch.write(settings.MEDIA_ROOT + "/problems/chebyshev/chebyshev_" + timestr + ".lp")
 
     temp_chebyshev = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="chebyshev_" + timestr)
     ch.write(temp_chebyshev.name)
 
     # local
-    # dst = temp_chebyshev.name.split("\\")[-1]
+    dst = temp_chebyshev.name.split("\\")[-1]
     # heroku
-    dst = temp_chebyshev.name.split("/")[-1]
+    # dst = temp_chebyshev.name.split("/")[-1]
     print(temp_chebyshev.name)
     temp_chebyshev.flush()
 
@@ -233,6 +219,7 @@ def generate_chebyshev(problem):
     f.flush()
     problem.chebyshev = File(f, name=dst)
     problem.save()
+
 
 # working with files locally
 def parse_gurobi(problem):
