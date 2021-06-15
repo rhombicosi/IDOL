@@ -15,6 +15,7 @@ from django.core.files.temp import NamedTemporaryFile
 from django.core import files
 from django.core.files import File
 
+
 def read_url(url):
     in_memory_file = requests.get(url, stream=True)
     some_temp_file = NamedTemporaryFile()
