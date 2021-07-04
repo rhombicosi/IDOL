@@ -1,5 +1,6 @@
 import time
 import sys
+import uuid
 
 from django.core.files.base import ContentFile
 from django.conf import settings
@@ -30,11 +31,12 @@ def problem_list(request):
 
 
 def upload_problem(request):
+
     if request.method == 'POST':
         form = ProblemForm(request.POST, request.FILES)
-        print()
         if form.is_valid():
             form.save()
+
             return redirect('problem_list')
     else:
         form = ProblemForm()
@@ -53,6 +55,9 @@ def upload_problem_parameters(request):
             t = problem_form.cleaned_data["title"]
             xml = problem_form.cleaned_data["xml"]
             solver = problem_form.cleaned_data["solver"]
+
+            xml.name = f'{xml.name.split(".")[0]}_{uuid.uuid4()}.lp'
+            print(xml.name)
             p = Problem(title=t, xml=xml, solver=solver)
             p.save()
 
@@ -229,7 +234,11 @@ def update_problem(request, pk):
         form = ParametersForm(request.POST, request.FILES)
         problem = Problem.objects.get(pk=pk)
         params = ProblemParameters()
-        print()
+
+        if problem.parameters:
+            for param in problem.parameters.all():
+                param.delete()
+
         if form.is_valid():
             if form.cleaned_data["weights"]:
                 w = form.cleaned_data["weights"]
@@ -239,15 +248,6 @@ def update_problem(request, pk):
                 params.reference = ref
             params.save()
             problem.parameters.add(params)
-
-            if params.weights:
-                w_path = settings.MEDIA_ROOT + '/problems/parameters/weights/'
-                w_name = os.path.basename(params.weights.path)
-                weights = read_txt(w_path, w_name)
-
-                #TODO: change problem update functionality
-                # new_p = create_gurobi_problem(pk, weights)
-                # new_p.parameters.add(params)
 
             return redirect('problem_list')
     else:

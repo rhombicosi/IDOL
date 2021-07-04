@@ -19,7 +19,6 @@ class Problem(models.Model):
     status = models.CharField(max_length=50, null=True, blank=True)
 
     # CBC fields
-    chebyshev = models.FileField(upload_to='problems/chebyshev/', blank=True)
     txt = models.FileField(upload_to='problems/txt/', blank=True)
     # common fields
     result = models.FileField(upload_to='problems/solutions/', blank=True)
@@ -30,8 +29,12 @@ class Problem(models.Model):
     def delete(self, *args, **kwargs):
         self.xml.delete()
         self.result.delete()
-        self.chebyshev.delete()
+        self.txt.delete()
+        # self.chebyshev.delete()
         super().delete(*args, **kwargs)
+
+    def file_name(self):
+        return self.xml.name.split('/')[2]
 
 
 class ProblemParameters(models.Model):
@@ -49,13 +52,16 @@ class ProblemParameters(models.Model):
         super().delete(*args, **kwargs)
 
 
-# class SingleObjectiveProblem(models.Model):
-#     problem = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name="single", null=True)
-#     singlelp = models.FileField(upload_to='problems/single/', verbose_name='single objective')
-#
-#     def delete(self, *args, **kwargs):
-#         self.singlelp.delete()
-#         super().delete(*args, **kwargs)
+class ProblemChebyshev(models.Model):
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name="chebyshev", null=True)
+    chebyshev = models.FileField(upload_to='problems/chebyshev/', blank=True)
+
+    def __str__(self):
+        return self.problem.title
+
+    def delete(self, *args, **kwargs):
+        self.chebyshev.delete()
+        super().delete(*args, **kwargs)
 
 
 class UserProblem(models.Model):
@@ -91,6 +97,7 @@ class UserProblem(models.Model):
         self.xml.delete()
         self.result.delete()
         self.chebyshev.delete()
+        self.txt.delete()
         super().delete(*args, **kwargs)
 
 

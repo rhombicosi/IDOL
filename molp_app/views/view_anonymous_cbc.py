@@ -11,6 +11,7 @@ from django_q.tasks import async_task
 
 def submit_cbc_problem(request, pk):
     problem = Problem.objects.get(pk=pk)
+
     slvr = problem.solver
 
     if request.method == 'POST':

@@ -19,41 +19,49 @@
     <table class="table mb-0">
       <thead>
         <tr>
-          <th>Title</th>
+          <th>Id</th>
+          <th>Input LP</th>
           <th>Solver</th>
-          <th>Download</th>
           <th>Submit</th>
           <th>Update</th>
-          <th>Result</th>
+          <th>Weights</th>
           <th>Chebyshev</th>
+          <th>Result</th>
           <th>Delete</th>
         </tr>
       </thead>
       <tbody>
         {% for problem in problems_cbc %}
           <tr>
-            <td>{{ problem.title }}</td>
-            <td>{{ problem.solver}}</td>
-            <td>
-              <a href="{{ problem.xml.url }}" class="btn btn-primary btn-sm" target="_blank">Download LP</a>
+            <td>{{ problem.id }}</td>
+            <td class="text-truncate " style="max-width: 270px;">
+              <a href="{{ problem.xml.url }}" target="_blank">{{ problem.file_name }}</a>
             </td>
+            <td>{{ problem.solver }}</td>
             <td>
               <form method="post" action="{% url 'submit_cbc_problem' problem.pk %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-secondary btn-sm">Submit Problem</button>
+                <button type="submit" class="btn btn-primary btn-sm">Submit Problem</button>
               </form>
             </td>
             <td>
               <a href="{% url 'update_problem' problem.pk%}" class="btn btn-secondary btn-sm">Update problem</a>
             </td>
             <td>
-              {% if problem.result %}
-                <a href="{{ problem.result.url }}" class="btn btn-primary btn-sm" target="_blank">Download Result</a>
+              {% if problem.parameters.first.weights %}
+                <a> + </a>
+              {% else %}
+                <a> - </a>
               {% endif %}
             </td>
             <td>
-              {% if problem.chebyshev %}
-                <a href="{{ problem.chebyshev.url }}" class="btn btn-primary btn-sm" target="_blank">Download Chebyshev</a>
+              {% if problem.chebyshev.last %}
+                <a href="{{ problem.chebyshev.last.chebyshev.url }}" class="btn btn-primary btn-sm" target="_blank">Download Chebyshev</a>
+              {% endif %}
+            </td>
+            <td>
+              {% if problem.result %}
+                <a href="{{ problem.result.url }}" class="btn btn-primary btn-sm" target="_blank">Download Result</a>
               {% endif %}
             </td>
             <td>

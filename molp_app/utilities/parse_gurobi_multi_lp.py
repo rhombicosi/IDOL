@@ -1,19 +1,29 @@
-import errno
+from django.conf import settings
+
+from django.core.files.temp import NamedTemporaryFile
+from django.core import files
+from django.core.files import File
+
+from django.forms.models import model_to_dict
 
 import requests
+
+from datetime import datetime
+
+import errno
+
 from mip import *
 import numpy as np
 
 import os
 from shutil import copyfile
 
-from django.conf import settings
+import boto3
+import botocore
 
-from datetime import datetime
+from molp_app.models import ProblemChebyshev
 
-from django.core.files.temp import NamedTemporaryFile
-from django.core import files
-from django.core.files import File
+s3 = boto3.resource('s3')
 
 
 def read_url(url):
@@ -202,13 +212,13 @@ def submit_cbc(problem):
         o = m.objective
         ch.add_constr(f[obj] - o == 0, 'f_constr_' + str(obj))
 
-    temp_chebyshev = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="chebyshev_" + timestr)
+    temp_chebyshev = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="chebyshev_" + str(problem.id) + "_" + timestr)
     ch.write(temp_chebyshev.name)
 
     # local
-    # dst = temp_chebyshev.name.split("\\")[-1]
+    dst = temp_chebyshev.name.split("\\")[-1]
     # heroku
-    dst = temp_chebyshev.name.split("/")[-1]
+    # dst = temp_chebyshev.name.split("/")[-1]
     print(temp_chebyshev.name)
     temp_chebyshev.flush()
 
@@ -218,7 +228,14 @@ def submit_cbc(problem):
     for li in data.readlines():
         f.write(bytes(li, 'utf-8'))
     f.flush()
-    problem.chebyshev = File(f, name=dst)
+    # print(dst)
+
+    name_chebyshev = "Chebyshev_" + problem.xml.name.split('/')[2]
+
+    chebyshev_instance = ProblemChebyshev(chebyshev=File(f, name=name_chebyshev), problem=problem)
+    chebyshev_instance.save()
+    problem.chebyshev.add(chebyshev_instance)
+
     problem.save()
 
 

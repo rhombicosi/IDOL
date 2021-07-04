@@ -247,9 +247,11 @@ def update_user_problem(request, pk):
 
             # create new problem only if new weights file is uploaded
             if params.weights:
-                w_path = settings.MEDIA_ROOT + '/problems/parameters/weights/'
-                w_name = os.path.basename(params.weights.path)
-                weights = read_txt(w_path, w_name)
+                # w_path = settings.MEDIA_ROOT + '/problems/parameters/weights/'
+                w_path = '/problems/parameters/weights/'
+                # w_name = os.path.basename(params.weights.path)
+                w_name = params.weights.url
+                # weights = read_txt(w_path, w_name)
 
                 # TODO: change problem update functionality
                 # new_p = create_user_gurobi_problem(request, pk, weights)
