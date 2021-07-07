@@ -278,8 +278,11 @@ def download_zip(request, pk):
 
     zf.close()
 
-    problem.zips = File(open(zfname, "rb"))
+    z = open(zfname, "rb")
+    problem.zips = File(z)
     problem.save()
+    z.close()
+    os.remove(zfname)
 
     return redirect(problem.zips.url)
 
