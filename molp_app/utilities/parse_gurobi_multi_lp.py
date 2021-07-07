@@ -1,3 +1,6 @@
+from io import BytesIO
+from zipfile import ZipFile
+
 from django.conf import settings
 
 from django.core.files.temp import NamedTemporaryFile
@@ -22,6 +25,7 @@ import boto3
 import botocore
 
 from molp_app.models import ProblemChebyshev
+from molp_app.utilities.file_helper import generate_zip
 
 s3 = boto3.resource('s3')
 
@@ -103,16 +107,16 @@ def parse_gurobi_url(problem):
 
     obj_temp_files = []
     for obj in range(NumOfObj):
-        f = NamedTemporaryFile(mode='wt', suffix=".txt", prefix="new_objectives_" + str(obj) + "_" + timestr)
-        obj_temp_files.append(f)
+        ff = NamedTemporaryFile(mode='wt', suffix=".txt", prefix="new_objectives_" + str(obj) + "_" + timestr)
+        obj_temp_files.append(ff)
 
         if sns == 'max':
-            f.write('MAXIMIZE\n')
+            ff.write('MAXIMIZE\n')
         else:
-            f.write('MINIMIZE\n')
-        f.write('Obj' + str(obj) + ':\n')
-        f.write(lines[start - 1 + (obj * 2 + 1)])
-        f.write('\n')
+            ff.write('MINIMIZE\n')
+        ff.write('Obj' + str(obj) + ':\n')
+        ff.write(lines[start - 1 + (obj * 2 + 1)])
+        ff.write('\n')
 
     # create file with constraints and variables
     temp_constr_file = NamedTemporaryFile(mode='wt', suffix=".txt", prefix="new_constrs_" + str(obj) + "_" + timestr)
@@ -147,17 +151,34 @@ def parse_gurobi_url(problem):
     return timestr, NumOfObj, problem_temp_files
 
 
-def submit_cbc(problem):
-    print("Task run!!!")
+# function returns dictionary of weights from txt file
+def parse_weights_url(problem):
 
-    timestr, NumOfObj, problem_temp_files = parse_gurobi_url(problem)
+    weightsurl = problem.parameters.all()[0].weights.url
+    weights_temp_file = read_url(weightsurl)
+    weights_temp_file.flush()
+    weights_temp_file.seek(0)
+    lines = weights_temp_file.readlines()
 
-    f = {}
-    weights = []
+    weights_temp_file.close()
+
+    weights = {}
+    for line in range(len(lines)):
+        lines[line] = lines[line].decode("utf-8")
+        weights[line] = lines[line]
+
+    for k, w in weights.items():
+        weights[k] = [float(item) for item in w.split()]
+        # print(f'weights: {weights[k]}')
+
+    return weights
+
+
+# calculate reference if it is not provided
+def calculate_reference(NumOfObj, problem_temp_files):
     ystar = {}
     models = {}
-    rho = 0.001
-
+    
     for obj in range(NumOfObj):
 
         m = Model(solver_name=CBC)
@@ -170,6 +191,7 @@ def submit_cbc(problem):
         m.read(obj_lp_path)
         print('model has {} vars, {} constraints and {} nzs'.format(m.num_cols, m.num_rows, m.num_nz))
 
+        # optimization with CBC
         m.max_gap = 0.25
         status = m.optimize(max_seconds=90)
 
@@ -182,61 +204,93 @@ def submit_cbc(problem):
         elif status == OptimizationStatus.NO_SOLUTION_FOUND:
             print('no feasible solution found, lower bound is: {}'.format(m.objective_bound))
             ystar[obj] = m.objective_bound
+    
+    return ystar, models        
+
+
+def submit_cbc(problem):
+    print("Task run!!!")
+
+    timestr, NumOfObj, problem_temp_files = parse_gurobi_url(problem)
+
+    f = {}
+    weights = {}
+    rho = 0.001
 
     # chebyshev scalarization
-    ch = Model(sense=MINIMIZE, solver_name=CBC)
-    m = models[0]
-    print(ystar)
-    for v in m.vars:
-        ch.add_var(name=v.name, var_type=v.var_type)
+    if problem.parameters.first():
+        if problem.parameters.all()[0].weights:
+            weights = parse_weights_url(problem)
+        else:
+            weights[0] = np.full(NumOfObj, 1 / NumOfObj).round(2).tolist()
 
-    for c in m.constrs:
-        ch.add_constr(c.expr, c.name)
+        if problem.parameters.all()[0].reference:
+            ystar, models = calculate_reference(NumOfObj, problem_temp_files)
+        else:
+            ystar, models = calculate_reference(NumOfObj, problem_temp_files)
+    else:
+        weights[0] = np.full(NumOfObj, 1 / NumOfObj).round(2).tolist()
+        ystar, models = calculate_reference(NumOfObj, problem_temp_files)
 
-    ch.add_var(name='s', var_type=CONTINUOUS)
-    ch.objective = ch.vars['s']
+    # for w in weights.items():
+    #     print(w)
 
-    for i in range(NumOfObj):
-        ch.add_var(name='f{}'.format(i + 1), var_type=CONTINUOUS)
-        f[i] = ch.vars['f{}'.format(i + 1)]
-        weights = np.full(NumOfObj, 1 / NumOfObj)
+    if problem.chebyshev:
+        for ch in problem.chebyshev.all():
+            ch.delete()
 
-    for i in range(NumOfObj):
-        ch.add_constr(
-            weights[i] * (ystar[i] - f[i]) + xsum(rho * (ystar[i] - f[i]) for i in range(NumOfObj)) <= ch.vars['s'],
-            'sum{}'.format(i + 1))
+    for k, w in weights.items():
+        ch = Model(sense=MINIMIZE, solver_name=CBC)
+        m = models[0]
+        name_chebyshev = "Chebyshev_" + str(k + 1) + '_' + problem.xml.name.split('/')[2]
 
-    for obj in range(NumOfObj):
+        for v in m.vars:
+            ch.add_var(name=v.name, var_type=v.var_type)
 
-        m = models[obj]
-        o = m.objective
-        ch.add_constr(f[obj] - o == 0, 'f_constr_' + str(obj))
+        for c in m.constrs:
+            ch.add_constr(c.expr, c.name)
 
-    temp_chebyshev = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="chebyshev_" + str(problem.id) + "_" + timestr)
-    ch.write(temp_chebyshev.name)
+        ch.add_var(name='s', var_type=CONTINUOUS)
+        ch.objective = ch.vars['s']
 
-    # local
-    dst = temp_chebyshev.name.split("\\")[-1]
-    # heroku
-    # dst = temp_chebyshev.name.split("/")[-1]
-    print(temp_chebyshev.name)
-    temp_chebyshev.flush()
+        for i in range(NumOfObj):
+            ch.add_var(name='f{}'.format(i + 1), var_type=CONTINUOUS)
+            f[i] = ch.vars['f{}'.format(i + 1)]
 
-    f = NamedTemporaryFile()
-    temp_chebyshev.seek(0)
-    data = open(temp_chebyshev.name, 'r')
-    for li in data.readlines():
-        f.write(bytes(li, 'utf-8'))
-    f.flush()
-    # print(dst)
+        for i in range(NumOfObj):
+            ch.add_constr(
+                weights[k][i] * (ystar[i] - f[i]) + xsum(rho * (ystar[i] - f[i]) for i in range(NumOfObj)) <= ch.vars[
+                    's'],
+                'sum{}'.format(i + 1))
 
-    name_chebyshev = "Chebyshev_" + problem.xml.name.split('/')[2]
+        for obj in range(NumOfObj):
+            m = models[obj]
+            o = m.objective
+            ch.add_constr(f[obj] - o == 0, 'f_constr_' + str(obj))
 
-    chebyshev_instance = ProblemChebyshev(chebyshev=File(f, name=name_chebyshev), problem=problem)
-    chebyshev_instance.save()
-    problem.chebyshev.add(chebyshev_instance)
+        temp_chebyshev = NamedTemporaryFile(mode='wt', suffix='.lp',
+                                            prefix="chebyshev_" + str(problem.id) + "_" + timestr)
+        ch.write(temp_chebyshev.name)
 
-    problem.save()
+        # local
+        dst = temp_chebyshev.name.split("\\")[-1]
+        # heroku
+        # dst = temp_chebyshev.name.split("/")[-1]
+        # print(temp_chebyshev.name)
+        temp_chebyshev.flush()
+
+        ff = NamedTemporaryFile()
+        temp_chebyshev.seek(0)
+        data = open(temp_chebyshev.name, 'r')
+        for li in data.readlines():
+            ff.write(bytes(li, 'utf-8'))
+        ff.flush()
+
+        chebyshev_instance = ProblemChebyshev(chebyshev=File(ff, name=name_chebyshev), problem=problem)
+        chebyshev_instance.save()
+        problem.chebyshev.add(chebyshev_instance)
+
+        problem.save()
 
 
 # working with files locally

@@ -1,11 +1,15 @@
+import io
 import time
 import sys
 import uuid
 
-from django.core.files.base import ContentFile
+from django.core.files.base import ContentFile, File
 from django.conf import settings
 
 # from .view_anonymous_gurobi import create_gurobi_problem
+from django.core.files.temp import NamedTemporaryFile
+from django.http import HttpResponse, FileResponse
+
 from ..utilities.file_helper import read_txt, save_files, get_context
 
 try:
@@ -20,6 +24,9 @@ from ..models import Problem, ProblemParameters
 
 # from gurobipy import os
 import os
+import requests
+from zipfile import ZipFile
+from boto3 import *
 
 
 # optimization
@@ -255,3 +262,26 @@ def update_problem(request, pk):
     return render(request, 'update_problem.html', {
         'form': form
     })
+
+
+def download_zip(request, pk):
+    problem = Problem.objects.get(pk=pk)
+    zfname = 'Chebyshev_' + str(problem.id) + '.zip'
+    zf = ZipFile(zfname, 'w')
+
+    if request.method == 'POST':
+        for ch in problem.chebyshev.all():
+            ch_url = ch.chebyshev.url
+            ch_name = ch.chebyshev.name.split('/')[2]
+            in_memory_file = requests.get(ch_url, stream=True)
+            zf.writestr(ch_name, in_memory_file.text)
+
+    zf.close()
+
+    problem.zips = File(open(zfname, "rb"))
+    problem.save()
+
+    return redirect(problem.zips.url)
+
+
+

@@ -1,18 +1,29 @@
 import errno
-import time
 from pathlib import Path
-# from gurobipy import *
 import os
+from datetime import datetime
+
+from io import BytesIO
+import zipfile
+
 from django.conf import settings
 from django.core.files import File
-
-from datetime import datetime
 
 from molp_app.models import Problem, UserProblem
 
 
+def generate_zip(files):
+    mem_zip = BytesIO()
+
+    with zipfile.ZipFile(mem_zip, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for f in files:
+            zf.writestr(f[0], f[1])
+
+    return mem_zip.getvalue()
+
+
 def read_txt(path, file):
-    # data_folder = Path("C:/Users/voka/!PY/django_code/gurobi_samples/")
+
     data_folder = Path(path)
     # file_to_open = data_folder / "weights.txt"
     file_to_open = data_folder / file
@@ -86,13 +97,11 @@ def save_files(filename, filepath, extension, field, entity, model=None, content
 def get_context():
     problems = Problem.objects.all()
     problems_neos = problems.filter(solver="NEOS")
-    problems_gurobi = problems.filter(solver="Gurobi")
     problems_cbc = problems.filter(solver="CBC")
 
     context = {
         'problems': problems,
         'problems_neos': problems_neos,
-        'problems_gurobi': problems_gurobi,
         'problems_cbc': problems_cbc,
     }
 
@@ -102,13 +111,11 @@ def get_context():
 def get_user_context(request):
     problems = UserProblem.objects.filter(user=request.user)
     problems_neos = problems.filter(solver="NEOS")
-    problems_gurobi = problems.filter(solver="Gurobi")
     problems_cbc = problems.filter(solver="CBC")
 
     user_context = {
         'problems': problems,
         'problems_neos': problems_neos,
-        'problems_gurobi': problems_gurobi,
         'problems_cbc': problems_cbc,
     }
 

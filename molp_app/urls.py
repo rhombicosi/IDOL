@@ -31,6 +31,8 @@ urlpatterns = [
     # path('problem/<int:pk>/', view_user_problem_gurobi.user_problem, name='user_problem'),
     path('problem/update_user/<int:pk>/', view_user.update_user_problem, name='update_user_problem'),
     path('problem/update/<int:pk>/', view_anonymous.update_problem, name='update_problem'),
+
+    path('problem/download/<int:pk>/', view_anonymous.download_zip, name='download_zip'),
 ]
 
 if settings.DEBUG:

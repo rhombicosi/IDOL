@@ -12,6 +12,7 @@ class Problem(models.Model):
     title = models.CharField(max_length=100)
     xml = models.FileField(upload_to='problems/xmls/', verbose_name='input file')
     solver = models.CharField(max_length=10, choices=SOLVERS, default=CBC)
+    zips = models.FileField(upload_to='problems/zips/', verbose_name='zips', blank=True)
 
     # NEOS fields
     jobNumber = models.IntegerField(null=True, blank=True)
@@ -30,6 +31,7 @@ class Problem(models.Model):
         self.xml.delete()
         self.result.delete()
         self.txt.delete()
+        self.zips.delete()
         # self.chebyshev.delete()
         super().delete(*args, **kwargs)
 
