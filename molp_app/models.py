@@ -53,6 +53,16 @@ class ProblemParameters(models.Model):
         self.reference.delete()
         super().delete(*args, **kwargs)
 
+    def delete_weights(self, *args, **kwargs):
+        self.weights.delete()
+        super().delete(*args, **kwargs)
+
+    def delete_reference(self, *args, **kwargs):
+        self.reference.delete()
+        super().delete(*args, **kwargs)
+
+
+
 
 class ProblemChebyshev(models.Model):
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name="chebyshev", null=True)

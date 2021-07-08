@@ -25,6 +25,7 @@
           <th>Submit</th>
           <th>Update</th>
           <th>Weights</th>
+          <th>Reference</th>
           <th>Chebyshev</th>
           <th>Result</th>
           <th>Delete</th>
@@ -49,6 +50,13 @@
             </td>
             <td>
               {% if problem.parameters.first.weights %}
+                <a> + </a>
+              {% else %}
+                <a> - </a>
+              {% endif %}
+            </td>
+            <td>
+              {% if problem.parameters.first.reference %}
                 <a> + </a>
               {% else %}
                 <a> - </a>

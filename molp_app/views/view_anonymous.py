@@ -240,22 +240,55 @@ def update_problem(request, pk):
     if request.method == 'POST':
         form = ParametersForm(request.POST, request.FILES)
         problem = Problem.objects.get(pk=pk)
-        params = ProblemParameters()
+        # params = ProblemParameters()
 
-        if problem.parameters:
-            for param in problem.parameters.all():
-                param.delete()
+        # if problem.parameters:
+        #     for param in problem.parameters.all():
+        #         param.delete()
+
+        if problem.parameters.first():
+            params = problem.parameters.first()
+        else:
+            params = ProblemParameters()
 
         if form.is_valid():
             if form.cleaned_data["weights"]:
+                print('weights')
+                print(form.cleaned_data["weights"])
+
+                if problem.parameters:
+                    for param in problem.parameters.all():
+                        param.delete_weights()
+
                 w = form.cleaned_data["weights"]
                 params.weights = w
+
+                if problem.parameters.first():
+                    problem.parameters.update(weights=w)
+
             if form.cleaned_data["reference"]:
+                print('reference')
+                print(form.cleaned_data["reference"])
+                if problem.parameters:
+                    for param in problem.parameters.all():
+                        param.delete_reference()
+
                 ref = form.cleaned_data["reference"]
                 params.reference = ref
-            params.save()
-            problem.parameters.add(params)
 
+                if problem.parameters.first():
+                    problem.parameters.update(reference=ref)
+
+            params.save()
+
+            if not problem.parameters.first():
+                problem.parameters.add(params)
+
+            # problem.parameters.add(params)
+
+
+
+            print(problem.parameters.all())
             return redirect('problem_list')
     else:
         form = ParametersForm()

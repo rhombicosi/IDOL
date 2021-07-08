@@ -127,6 +127,7 @@ def parse_gurobi_url(problem):
 
     # opening first file in append mode and second file in read mode
     problem_temp_files = []
+    models = {}
     for obj in range(NumOfObj):
 
         obj_lp_path = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="new_problem_" + str(obj) + "_" + timestr)
@@ -148,7 +149,18 @@ def parse_gurobi_url(problem):
         # f3.flush()
         f1.write(f3.read())
 
-    return timestr, NumOfObj, problem_temp_files
+        # create a model for each objective
+        m = Model(solver_name=CBC)
+        models[obj] = m
+
+        obj_lp_path = problem_temp_files[obj].name
+
+        print(obj_lp_path)
+        problem_temp_files[obj].flush()
+        m.read(obj_lp_path)
+        print('model has {} vars, {} constraints and {} nzs'.format(m.num_cols, m.num_rows, m.num_nz))
+
+    return timestr, NumOfObj, models
 
 
 # function returns dictionary of weights from txt file
@@ -174,22 +186,35 @@ def parse_weights_url(problem):
     return weights
 
 
+# function returns dictionary of references from txt file
+def parse_reference_url(problem):
+
+    referenceurl = problem.parameters.all()[0].reference.url
+    reference_temp_file = read_url(referenceurl)
+    reference_temp_file.flush()
+    reference_temp_file.seek(0)
+    lines = reference_temp_file.readlines()
+
+    reference_temp_file.close()
+
+    reference = {}
+    for line in range(len(lines)):
+        lines[line] = lines[line].decode("utf-8")
+        reference[line] = lines[line]
+
+    for k, w in reference.items():
+        reference[k] = [float(item) for item in w.split()]
+        # print(f'reference: {reference[k]}')
+
+    return reference
+
+
 # calculate reference if it is not provided
-def calculate_reference(NumOfObj, problem_temp_files):
+def calculate_reference(NumOfObj, models):
     ystar = {}
-    models = {}
     
     for obj in range(NumOfObj):
-
-        m = Model(solver_name=CBC)
-        models[obj] = m
-
-        obj_lp_path = problem_temp_files[obj].name
-
-        print(obj_lp_path)
-        problem_temp_files[obj].flush()
-        m.read(obj_lp_path)
-        print('model has {} vars, {} constraints and {} nzs'.format(m.num_cols, m.num_rows, m.num_nz))
+        m = models[obj]
 
         # optimization with CBC
         m.max_gap = 0.25
@@ -205,16 +230,17 @@ def calculate_reference(NumOfObj, problem_temp_files):
             print('no feasible solution found, lower bound is: {}'.format(m.objective_bound))
             ystar[obj] = m.objective_bound
     
-    return ystar, models        
+    return ystar
 
 
 def submit_cbc(problem):
     print("Task run!!!")
 
-    timestr, NumOfObj, problem_temp_files = parse_gurobi_url(problem)
+    timestr, NumOfObj, models = parse_gurobi_url(problem)
 
     f = {}
     weights = {}
+    ystar = {}
     rho = 0.001
 
     # chebyshev scalarization
@@ -225,12 +251,13 @@ def submit_cbc(problem):
             weights[0] = np.full(NumOfObj, 1 / NumOfObj).round(2).tolist()
 
         if problem.parameters.all()[0].reference:
-            ystar, models = calculate_reference(NumOfObj, problem_temp_files)
+            # ystar = calculate_reference(NumOfObj, models)
+            ystar = parse_reference_url(problem)
         else:
-            ystar, models = calculate_reference(NumOfObj, problem_temp_files)
+            ystar[0] = calculate_reference(NumOfObj, models)
     else:
         weights[0] = np.full(NumOfObj, 1 / NumOfObj).round(2).tolist()
-        ystar, models = calculate_reference(NumOfObj, problem_temp_files)
+        ystar[0] = calculate_reference(NumOfObj, models)
 
     # for w in weights.items():
     #     print(w)
@@ -240,57 +267,58 @@ def submit_cbc(problem):
             ch.delete()
 
     for k, w in weights.items():
-        ch = Model(sense=MINIMIZE, solver_name=CBC)
-        m = models[0]
-        name_chebyshev = "Chebyshev_" + str(k + 1) + '_' + problem.xml.name.split('/')[2]
+        for j, r in ystar.items():
+            ch = Model(sense=MINIMIZE, solver_name=CBC)
+            m = models[0]
+            name_chebyshev = "Chebyshev_" + str(k + 1) + '_' + str(j + 1) + '_' + problem.xml.name.split('/')[2]
 
-        for v in m.vars:
-            ch.add_var(name=v.name, var_type=v.var_type)
+            for v in m.vars:
+                ch.add_var(name=v.name, var_type=v.var_type)
 
-        for c in m.constrs:
-            ch.add_constr(c.expr, c.name)
+            for c in m.constrs:
+                ch.add_constr(c.expr, c.name)
 
-        ch.add_var(name='s', var_type=CONTINUOUS)
-        ch.objective = ch.vars['s']
+            ch.add_var(name='s', var_type=CONTINUOUS)
+            ch.objective = ch.vars['s']
 
-        for i in range(NumOfObj):
-            ch.add_var(name='f{}'.format(i + 1), var_type=CONTINUOUS)
-            f[i] = ch.vars['f{}'.format(i + 1)]
+            for i in range(NumOfObj):
+                ch.add_var(name='f{}'.format(i + 1), var_type=CONTINUOUS)
+                f[i] = ch.vars['f{}'.format(i + 1)]
 
-        for i in range(NumOfObj):
-            ch.add_constr(
-                weights[k][i] * (ystar[i] - f[i]) + xsum(rho * (ystar[i] - f[i]) for i in range(NumOfObj)) <= ch.vars[
-                    's'],
-                'sum{}'.format(i + 1))
+            for i in range(NumOfObj):
+                ch.add_constr(
+                    weights[k][i] * (ystar[j][i] - f[i]) + xsum(rho * (ystar[j][i] - f[i]) for i in range(NumOfObj)) <= ch.vars[
+                        's'],
+                    'sum{}'.format(i + 1))
 
-        for obj in range(NumOfObj):
-            m = models[obj]
-            o = m.objective
-            ch.add_constr(f[obj] - o == 0, 'f_constr_' + str(obj))
+            for obj in range(NumOfObj):
+                m = models[obj]
+                o = m.objective
+                ch.add_constr(f[obj] - o == 0, 'f_constr_' + str(obj))
 
-        temp_chebyshev = NamedTemporaryFile(mode='wt', suffix='.lp',
-                                            prefix="chebyshev_" + str(problem.id) + "_" + timestr)
-        ch.write(temp_chebyshev.name)
+            temp_chebyshev = NamedTemporaryFile(mode='wt', suffix='.lp',
+                                                prefix="chebyshev_" + str(problem.id) + "_" + timestr)
+            ch.write(temp_chebyshev.name)
 
-        # local
-        dst = temp_chebyshev.name.split("\\")[-1]
-        # heroku
-        # dst = temp_chebyshev.name.split("/")[-1]
-        # print(temp_chebyshev.name)
-        temp_chebyshev.flush()
+            # local
+            # dst = temp_chebyshev.name.split("\\")[-1]
+            # heroku
+            # dst = temp_chebyshev.name.split("/")[-1]
+            # print(temp_chebyshev.name)
+            temp_chebyshev.flush()
 
-        ff = NamedTemporaryFile()
-        temp_chebyshev.seek(0)
-        data = open(temp_chebyshev.name, 'r')
-        for li in data.readlines():
-            ff.write(bytes(li, 'utf-8'))
-        ff.flush()
+            ff = NamedTemporaryFile()
+            temp_chebyshev.seek(0)
+            data = open(temp_chebyshev.name, 'r')
+            for li in data.readlines():
+                ff.write(bytes(li, 'utf-8'))
+            ff.flush()
 
-        chebyshev_instance = ProblemChebyshev(chebyshev=File(ff, name=name_chebyshev), problem=problem)
-        chebyshev_instance.save()
-        problem.chebyshev.add(chebyshev_instance)
+            chebyshev_instance = ProblemChebyshev(chebyshev=File(ff, name=name_chebyshev), problem=problem)
+            chebyshev_instance.save()
+            problem.chebyshev.add(chebyshev_instance)
 
-        problem.save()
+            problem.save()
 
 
 # working with files locally
