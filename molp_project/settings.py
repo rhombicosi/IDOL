@@ -157,7 +157,7 @@ Q_CLUSTER = {
     'queue_limit': 500,
     'cpu_affinity': 1,
     'label': 'Django Q',
-    'redis': config('redis')
+    'redis': config('REDIS_URL')
 }
 
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
