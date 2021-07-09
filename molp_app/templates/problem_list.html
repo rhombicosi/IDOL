@@ -21,7 +21,6 @@
         <tr>
           <th>Id</th>
           <th>Input LP</th>
-          <th>Solver</th>
           <th>Submit</th>
           <th>Update</th>
           <th>Weights</th>
@@ -38,7 +37,6 @@
             <td>
               <a class="btn btn-link" href="{{ problem.xml.url }}">{{ problem.file_name }}</a>
             </td>
-            <td>{{ problem.solver }}</td>
             <td>
               <form method="post" action="{% url 'submit_cbc_problem' problem.pk %}">
                 {% csrf_token %}

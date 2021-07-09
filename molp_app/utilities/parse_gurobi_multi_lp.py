@@ -1,13 +1,8 @@
-from io import BytesIO
-from zipfile import ZipFile
-
 from django.conf import settings
 
 from django.core.files.temp import NamedTemporaryFile
 from django.core import files
 from django.core.files import File
-
-from django.forms.models import model_to_dict
 
 import requests
 
@@ -22,7 +17,6 @@ import os
 from shutil import copyfile
 
 import boto3
-import botocore
 
 from molp_app.models import ProblemChebyshev
 from molp_app.utilities.file_helper import generate_zip
@@ -93,7 +87,6 @@ def parse_gurobi_url(problem):
                 sns = w
                 sns_line = count
                 print(sns)
-                print(sns_line)
                 print("Line{}: {}".format(count, line.strip()))
 
     # create files for each objective
@@ -119,94 +112,83 @@ def parse_gurobi_url(problem):
         ff.write('\n')
 
     # create file with constraints and variables
-    temp_constr_file = NamedTemporaryFile(mode='wt', suffix=".txt", prefix="new_constrs_" + str(obj) + "_" + timestr)
+    constr_temp_file = NamedTemporaryFile(mode='wt', suffix=".txt", prefix="new_constrs_" + str(obj) + "_" + timestr)
 
     for l in range(st_line - 1, len(lines)):
-        temp_constr_file.write(lines[l])
+        constr_temp_file.write(lines[l])
     # f.close()
 
     # opening first file in append mode and second file in read mode
     problem_temp_files = []
     models = {}
+
     for obj in range(NumOfObj):
 
-        obj_lp_path = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="new_problem_" + str(obj) + "_" + timestr)
-        problem_temp_files.append(obj_lp_path)
-        # obj_lp_path.flush()
-        f1 = open(obj_lp_path.name, 'a+')
+        problem_lp_path = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="new_problem_" + str(obj) + "_" + timestr)
+        problem_temp_files.append(problem_lp_path)
+        f1 = open(problem_lp_path.name, 'a+')
 
         obj_temp_files[obj].flush()
         obj_temp_files[obj].seek(0)
         f2 = open(obj_temp_files[obj].name, 'r')
 
-        temp_constr_file.flush()
-        temp_constr_file.seek(0)
-        f3 = open(temp_constr_file.name, 'r')
+        constr_temp_file.flush()
+        constr_temp_file.seek(0)
+        f3 = open(constr_temp_file.name, 'r')
 
         # appending the contents of the second file to the first file
         # f2.flush()
         f1.write(f2.read())
         # f3.flush()
         f1.write(f3.read())
+        f1.flush()
 
         # create a model for each objective
         m = Model(solver_name=CBC)
         models[obj] = m
 
-        obj_lp_path = problem_temp_files[obj].name
-
-        print(obj_lp_path)
         problem_temp_files[obj].flush()
-        m.read(obj_lp_path)
+        problem_temp_files[obj].seek(0)
+
+        problem_lp_path = problem_temp_files[obj].name
+        print(problem_lp_path)
+
+        m.read(problem_lp_path)
         print('model has {} vars, {} constraints and {} nzs'.format(m.num_cols, m.num_rows, m.num_nz))
+
+    # test lp format
+    # print('LP FORMAT TEST')
+    # for tfile in problem_temp_files:
+    #     tf = open(tfile.name, 'r')
+    #     for l in tf.readlines():
+    #         print(l)
+    #     tf.close()
 
     return timestr, NumOfObj, models
 
 
-# function returns dictionary of weights from txt file
-def parse_weights_url(problem):
+def parse_parameters_url(problem, param):
 
-    weightsurl = problem.parameters.all()[0].weights.url
-    weights_temp_file = read_url(weightsurl)
-    weights_temp_file.flush()
-    weights_temp_file.seek(0)
-    lines = weights_temp_file.readlines()
+    param_field = getattr(problem.parameters.all()[0], param)
+    paramurl = param_field.url
+    # print(paramurl)
+    param_temp_file = read_url(paramurl)
+    param_temp_file.flush()
+    param_temp_file.seek(0)
+    lines = param_temp_file.readlines()
 
-    weights_temp_file.close()
+    param_temp_file.close()
 
-    weights = {}
+    params = {}
     for line in range(len(lines)):
         lines[line] = lines[line].decode("utf-8")
-        weights[line] = lines[line]
+        params[line] = lines[line]
 
-    for k, w in weights.items():
-        weights[k] = [float(item) for item in w.split()]
-        # print(f'weights: {weights[k]}')
-
-    return weights
-
-
-# function returns dictionary of references from txt file
-def parse_reference_url(problem):
-
-    referenceurl = problem.parameters.all()[0].reference.url
-    reference_temp_file = read_url(referenceurl)
-    reference_temp_file.flush()
-    reference_temp_file.seek(0)
-    lines = reference_temp_file.readlines()
-
-    reference_temp_file.close()
-
-    reference = {}
-    for line in range(len(lines)):
-        lines[line] = lines[line].decode("utf-8")
-        reference[line] = lines[line]
-
-    for k, w in reference.items():
-        reference[k] = [float(item) for item in w.split()]
+    for k, w in params.items():
+        params[k] = [float(item) for item in w.split()]
         # print(f'reference: {reference[k]}')
 
-    return reference
+    return params
 
 
 # calculate reference if it is not provided
@@ -246,13 +228,12 @@ def submit_cbc(problem):
     # chebyshev scalarization
     if problem.parameters.first():
         if problem.parameters.all()[0].weights:
-            weights = parse_weights_url(problem)
+            weights = parse_parameters_url(problem, 'weights')
         else:
             weights[0] = np.full(NumOfObj, 1 / NumOfObj).round(2).tolist()
 
         if problem.parameters.all()[0].reference:
-            # ystar = calculate_reference(NumOfObj, models)
-            ystar = parse_reference_url(problem)
+            ystar = parse_parameters_url(problem, 'reference')
         else:
             ystar[0] = calculate_reference(NumOfObj, models)
     else:
@@ -300,21 +281,16 @@ def submit_cbc(problem):
                                                 prefix="chebyshev_" + str(problem.id) + "_" + timestr)
             ch.write(temp_chebyshev.name)
 
-            # local
-            # dst = temp_chebyshev.name.split("\\")[-1]
-            # heroku
-            # dst = temp_chebyshev.name.split("/")[-1]
-            # print(temp_chebyshev.name)
             temp_chebyshev.flush()
 
-            ff = NamedTemporaryFile()
+            ch_bytes = NamedTemporaryFile()
             temp_chebyshev.seek(0)
             data = open(temp_chebyshev.name, 'r')
             for li in data.readlines():
-                ff.write(bytes(li, 'utf-8'))
-            ff.flush()
+                ch_bytes.write(bytes(li, 'utf-8'))
+            ch_bytes.flush()
 
-            chebyshev_instance = ProblemChebyshev(chebyshev=File(ff, name=name_chebyshev), problem=problem)
+            chebyshev_instance = ProblemChebyshev(chebyshev=File(ch_bytes, name=name_chebyshev), problem=problem)
             chebyshev_instance.save()
             problem.chebyshev.add(chebyshev_instance)
 

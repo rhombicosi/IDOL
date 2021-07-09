@@ -180,5 +180,3 @@ AWS_LOCATION = 'static'
 DEFAULT_FILE_STORAGE = 'molp_project.storage_backends.MediaStorage'
 
 django_heroku.settings(locals())
-
-DISABLE_COLLECTSTATIC=1
