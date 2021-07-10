@@ -19,7 +19,6 @@ from shutil import copyfile
 import boto3
 
 from molp_app.models import ProblemChebyshev
-from molp_app.utilities.file_helper import generate_zip
 
 s3 = boto3.resource('s3')
 
@@ -38,6 +37,8 @@ def read_url(url):
 
 
 # working with cloud storage
+# parse gurobi style multobjective lp
+# produce problem models for each objective
 def parse_gurobi_url(problem):
 
     lpurl = problem.xml.url
@@ -52,7 +53,7 @@ def parse_gurobi_url(problem):
     problem.txt = files.File(lp_temp_file, name=dst)
     problem.save()
 
-    # get txt file with multiobjective problem
+    # generate txt file with multiobjective problem
     txturl = problem.txt.url
     txt_temp_file = read_url(txturl)
     txt_temp_file.flush()
@@ -64,7 +65,6 @@ def parse_gurobi_url(problem):
     for line in range(len(lines)):
         lines[line] = lines[line].decode("utf-8")
 
-    # parse multiobjective Gurobi format
     keywords = {'st': ['subject to', 'st', 's.t.'], 'sns': ['max', 'min']}
 
     count = 0
@@ -73,7 +73,7 @@ def parse_gurobi_url(problem):
     sns = ''
 
     # find objectives and constraints in txt file
-    # Strips the newline character
+    # strip the newline character
     for line in lines:
         count += 1
         # line = line.decode("utf-8")
@@ -137,10 +137,9 @@ def parse_gurobi_url(problem):
         f3 = open(constr_temp_file.name, 'r')
 
         # appending the contents of the second file to the first file
-        # f2.flush()
         f1.write(f2.read())
-        # f3.flush()
         f1.write(f3.read())
+        # temp file fix with f1 flush
         f1.flush()
 
         # create a model for each objective
@@ -156,22 +155,14 @@ def parse_gurobi_url(problem):
         m.read(problem_lp_path)
         print('model has {} vars, {} constraints and {} nzs'.format(m.num_cols, m.num_rows, m.num_nz))
 
-    # test lp format
-    # print('LP FORMAT TEST')
-    # for tfile in problem_temp_files:
-    #     tf = open(tfile.name, 'r')
-    #     for l in tf.readlines():
-    #         print(l)
-    #     tf.close()
-
     return timestr, NumOfObj, models
 
 
+# parse txt files with weights and reference points
 def parse_parameters_url(problem, param):
 
     param_field = getattr(problem.parameters.all()[0], param)
     paramurl = param_field.url
-    # print(paramurl)
     param_temp_file = read_url(paramurl)
     param_temp_file.flush()
     param_temp_file.seek(0)
@@ -186,7 +177,6 @@ def parse_parameters_url(problem, param):
 
     for k, w in params.items():
         params[k] = [float(item) for item in w.split()]
-        # print(f'reference: {reference[k]}')
 
     return params
 
@@ -215,9 +205,9 @@ def calculate_reference(NumOfObj, models):
     return ystar
 
 
+# generates chebyshev scalarization
 def submit_cbc(problem):
-    print("Task run!!!")
-
+    print("Scalarization task has been started")
     timestr, NumOfObj, models = parse_gurobi_url(problem)
 
     f = {}

@@ -32,7 +32,6 @@ class Problem(models.Model):
         self.result.delete()
         self.txt.delete()
         self.zips.delete()
-        # self.chebyshev.delete()
         super().delete(*args, **kwargs)
 
     def file_name(self):
@@ -60,8 +59,6 @@ class ProblemParameters(models.Model):
     def delete_reference(self, *args, **kwargs):
         self.reference.delete()
         super().delete(*args, **kwargs)
-
-
 
 
 class ProblemChebyshev(models.Model):
