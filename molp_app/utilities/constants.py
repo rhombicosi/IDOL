@@ -1,1 +1,0 @@
-TIMELIMIT = 60

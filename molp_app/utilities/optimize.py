@@ -4,7 +4,6 @@ import django
 django.setup()
 
 from molp_app.utilities.file_helper import save_files
-import molp_app.utilities.constants as constants
 from molp_app.models import Problem
 
 

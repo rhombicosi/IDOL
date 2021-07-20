@@ -18,22 +18,22 @@ from shutil import copyfile
 
 import boto3
 
-from molp_app.models import ProblemChebyshev
+from molp_app.models import ProblemChebyshev, UserProblemChebyshev
 
 s3 = boto3.resource('s3')
 
 
 def read_url(url):
     in_memory_file = requests.get(url, stream=True)
-    some_temp_file = NamedTemporaryFile()
+    url_temp_file = NamedTemporaryFile()
 
     for block in in_memory_file.iter_content(1024*8):
         if not block:
             break
 
-        some_temp_file.write(block)
+        url_temp_file.write(block)
 
-    return some_temp_file
+    return url_temp_file
 
 
 # working with cloud storage
@@ -41,26 +41,11 @@ def read_url(url):
 # produce problem models for each objective
 def parse_gurobi_url(problem):
 
-    lpurl = problem.xml.url
-
-    lp_temp_file = read_url(lpurl)
-
-    extension = '.txt'
-    pre, ext = lpurl.split('/')[-1].split('.')
-    dst = pre + extension
-
+    lp_temp_file = read_url(problem.xml.url)
     lp_temp_file.flush()
-    problem.txt = files.File(lp_temp_file, name=dst)
-    problem.save()
-
-    # generate txt file with multiobjective problem
-    txturl = problem.txt.url
-    txt_temp_file = read_url(txturl)
-    txt_temp_file.flush()
-    txt_temp_file.seek(0)
-    lines = txt_temp_file.readlines()
-
-    txt_temp_file.close()
+    lp_temp_file.seek(0)
+    lines = lp_temp_file.readlines()
+    lp_temp_file.close()
 
     for line in range(len(lines)):
         lines[line] = lines[line].decode("utf-8")
@@ -93,13 +78,12 @@ def parse_gurobi_url(problem):
     start = sns_line + 1
     end = st_line
 
-    NumOfObj = (end - start) // 2
+    num_of_obj = (end - start) // 2
 
-    timestr = datetime.now()
-    timestr = str(timestr.microsecond)
+    timestr = str(datetime.now().microsecond)
 
     obj_temp_files = []
-    for obj in range(NumOfObj):
+    for obj in range(num_of_obj):
         ff = NamedTemporaryFile(mode='wt', suffix=".txt", prefix="new_objectives_" + str(obj) + "_" + timestr)
         obj_temp_files.append(ff)
 
@@ -116,13 +100,12 @@ def parse_gurobi_url(problem):
 
     for l in range(st_line - 1, len(lines)):
         constr_temp_file.write(lines[l])
-    # f.close()
 
-    # opening first file in append mode and second file in read mode
+    # create file for each single objective problem
     problem_temp_files = []
     models = {}
 
-    for obj in range(NumOfObj):
+    for obj in range(num_of_obj):
 
         problem_lp_path = NamedTemporaryFile(mode='wt', suffix='.lp', prefix="new_problem_" + str(obj) + "_" + timestr)
         problem_temp_files.append(problem_lp_path)
@@ -155,19 +138,18 @@ def parse_gurobi_url(problem):
         m.read(problem_lp_path)
         print('model has {} vars, {} constraints and {} nzs'.format(m.num_cols, m.num_rows, m.num_nz))
 
-    return timestr, NumOfObj, models
+    return timestr, num_of_obj, models
 
 
 # parse txt files with weights and reference points
 def parse_parameters_url(problem, param):
 
     param_field = getattr(problem.parameters.all()[0], param)
-    paramurl = param_field.url
-    param_temp_file = read_url(paramurl)
+    param_temp_file = read_url(param_field.url)
+
     param_temp_file.flush()
     param_temp_file.seek(0)
     lines = param_temp_file.readlines()
-
     param_temp_file.close()
 
     params = {}
@@ -182,10 +164,10 @@ def parse_parameters_url(problem, param):
 
 
 # calculate reference if it is not provided
-def calculate_reference(NumOfObj, models):
+def calculate_reference(num_of_obj, models):
     ystar = {}
     
-    for obj in range(NumOfObj):
+    for obj in range(num_of_obj):
         m = models[obj]
 
         # optimization with CBC
@@ -206,9 +188,9 @@ def calculate_reference(NumOfObj, models):
 
 
 # generates chebyshev scalarization
-def submit_cbc(problem):
+def submit_cbc(problem, user):
     print("Scalarization task has been started")
-    timestr, NumOfObj, models = parse_gurobi_url(problem)
+    timestr, num_of_obj, models = parse_gurobi_url(problem)
 
     f = {}
     weights = {}
@@ -220,15 +202,15 @@ def submit_cbc(problem):
         if problem.parameters.all()[0].weights:
             weights = parse_parameters_url(problem, 'weights')
         else:
-            weights[0] = np.full(NumOfObj, 1 / NumOfObj).round(2).tolist()
+            weights[0] = np.full(num_of_obj, 1 / num_of_obj).round(2).tolist()
 
         if problem.parameters.all()[0].reference:
             ystar = parse_parameters_url(problem, 'reference')
         else:
-            ystar[0] = calculate_reference(NumOfObj, models)
+            ystar[0] = calculate_reference(num_of_obj, models)
     else:
-        weights[0] = np.full(NumOfObj, 1 / NumOfObj).round(2).tolist()
-        ystar[0] = calculate_reference(NumOfObj, models)
+        weights[0] = np.full(num_of_obj, 1 / num_of_obj).round(2).tolist()
+        ystar[0] = calculate_reference(num_of_obj, models)
 
     # for w in weights.items():
     #     print(w)
@@ -252,17 +234,17 @@ def submit_cbc(problem):
             ch.add_var(name='s', var_type=CONTINUOUS)
             ch.objective = ch.vars['s']
 
-            for i in range(NumOfObj):
+            for i in range(num_of_obj):
                 ch.add_var(name='f{}'.format(i + 1), var_type=CONTINUOUS)
                 f[i] = ch.vars['f{}'.format(i + 1)]
 
-            for i in range(NumOfObj):
+            for i in range(num_of_obj):
                 ch.add_constr(
-                    weights[k][i] * (ystar[j][i] - f[i]) + xsum(rho * (ystar[j][i] - f[i]) for i in range(NumOfObj)) <= ch.vars[
+                    weights[k][i] * (ystar[j][i] - f[i]) + xsum(rho * (ystar[j][i] - f[i]) for i in range(num_of_obj)) <= ch.vars[
                         's'],
                     'sum{}'.format(i + 1))
 
-            for obj in range(NumOfObj):
+            for obj in range(num_of_obj):
                 m = models[obj]
                 o = m.objective
                 ch.add_constr(f[obj] - o == 0, 'f_constr_' + str(obj))
@@ -280,9 +262,14 @@ def submit_cbc(problem):
                 ch_bytes.write(bytes(li, 'utf-8'))
             ch_bytes.flush()
 
-            chebyshev_instance = ProblemChebyshev(chebyshev=File(ch_bytes, name=name_chebyshev), problem=problem)
-            chebyshev_instance.save()
-            problem.chebyshev.add(chebyshev_instance)
+            if user:
+                chebyshev_instance = UserProblemChebyshev(chebyshev=File(ch_bytes, name=name_chebyshev), problem=problem)
+                chebyshev_instance.save()
+                problem.chebyshev.add(chebyshev_instance)
+            else:
+                chebyshev_instance = ProblemChebyshev(chebyshev=File(ch_bytes, name=name_chebyshev), problem=problem)
+                chebyshev_instance.save()
+                problem.chebyshev.add(chebyshev_instance)
 
             problem.save()
 

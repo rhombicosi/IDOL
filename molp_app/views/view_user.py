@@ -1,12 +1,13 @@
 import time
 import sys
+import uuid
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.core.files.base import ContentFile
+from django.core.files.base import ContentFile, File
+from django_q.tasks import async_task
 
-# from .view_user_gurobi import create_user_gurobi_problem
-from molp_app.utilities.file_helper import read_txt, save_files, get_user_context
+from molp_app.utilities.scalarization import submit_cbc
 
 try:
     import xmlrpc.client as xmlrpclib
@@ -15,56 +16,58 @@ except ImportError:
 
 from django.shortcuts import render, redirect
 
-from molp_app.forms import ProblemForm, ParametersForm
+from molp_app.forms import ProblemForm, ParametersForm, UserProblemForm, UserParametersForm
 from molp_app.models import UserProblem, UserProblemParameters
 
 # from gurobipy import os
 import os
+import requests
+from zipfile import ZipFile
 
 
 # registered user
 @login_required
-def user_problems(request):
+def user_problem_list(request):
     user_context = get_user_context(request)
 
-    return render(request, 'user_problems.html', user_context)
+    return render(request, 'user_problem_list.html', user_context)
 
 
-@login_required
-def upload_user_problem(request):
-    user_context = get_user_context(request)
-
-    if request.method == 'POST':
-        form = ProblemForm(request.POST, request.FILES)
-        print()
-        if form.is_valid():
-            # form.save()
-            t = form.cleaned_data["title"]
-            xml = form.cleaned_data["xml"]
-            slvr = form.cleaned_data["solver"]
-            p = UserProblem(title=t, xml=xml, solver=slvr)
-            p.save()
-            request.user.problems.add(p)
-            return render('user_problems.html', user_context)
-    else:
-        form = ProblemForm()
-    return render(request, 'upload_user_problem.html', {
-        'form': form
-    })
-
+# @login_required
+# def upload_user_problem(request):
+#     user_context = get_user_context(request)
+#
+#     if request.method == 'POST':
+#         form = ProblemForm(request.POST, request.FILES)
+#         print()
+#         if form.is_valid():
+#             # form.save()
+#             t = form.cleaned_data["title"]
+#             xml = form.cleaned_data["xml"]
+#             slvr = form.cleaned_data["solver"]
+#             p = UserProblem(title=t, xml=xml, solver=slvr)
+#             p.save()
+#             request.user.problems.add(p)
+#             return render('user_problem_list.html', user_context)
+#     else:
+#         form = ProblemForm()
+#     return render(request, 'upload_user_problem.html', {
+#         'form': form
+#     })
 
 @login_required
 def upload_user_problem_parameters(request):
 
     if request.method == 'POST':
-        problem_form = ProblemForm(request.POST, request.FILES)
-        parameters_form = ParametersForm(request.POST, request.FILES)
+        problem_form = UserProblemForm(request.POST, request.FILES)
+        parameters_form = UserParametersForm(request.POST, request.FILES)
 
         if problem_form.is_valid() and parameters_form.is_valid():
-            t = problem_form.cleaned_data["title"]
+
             xml = problem_form.cleaned_data["xml"]
             solver = problem_form.cleaned_data["solver"]
-            p = UserProblem(title=t, xml=xml, solver=solver)
+            xml.name = f'{xml.name.split(".")[0]}_{uuid.uuid4()}.lp'
+            p = UserProblem(xml=xml, solver=solver)
             p.save()
 
             params = UserProblemParameters()
@@ -89,7 +92,7 @@ def upload_user_problem_parameters(request):
             user_context = get_user_context(request)
             user_context.update({'solver': solver})
 
-            return render(request, 'user_problems.html', user_context)
+            return render(request, 'user_problem_list.html', user_context)
     else:
         problem_form = ProblemForm()
         parameters_form = ParametersForm()
@@ -140,7 +143,21 @@ def submit_user_problem(request, pk):
     user_context = get_user_context(request)
     user_context.update({'solver': solver})
 
-    return render(request, 'user_problems.html', user_context)
+    return render(request, 'user_problem_list.html', user_context)
+
+
+@login_required
+def submit_user_cbc_problem(request, pk):
+    problem = UserProblem.objects.get(pk=pk)
+    slvr = problem.solver
+
+    if request.method == 'POST':
+        async_task(submit_cbc, problem, 1)
+
+        user_context = get_user_context(request)
+        user_context.update({'solver': slvr})
+
+    return render(request, 'user_problem_list.html', user_context)
 
 
 @login_required
@@ -171,7 +188,7 @@ def status_user_problem(request, pk):
     user_context = get_user_context(request)
     user_context.update({'solver': solver})
 
-    return render(request, 'user_problems.html', user_context)
+    return render(request, 'user_problem_list.html', user_context)
 
 
 @login_required
@@ -208,7 +225,7 @@ def read_user_result(request, pk):
     user_context = get_user_context(request)
     user_context.update({'solver': solver})
 
-    return render(request, 'user_problems.html', user_context)
+    return render(request, 'user_problem_list.html', user_context)
 
 
 @login_required
@@ -225,43 +242,104 @@ def delete_user_problem(request, pk):
     user_context = get_user_context(request)
     user_context.update({'solver': solver})
 
-    return render(request, 'user_problems.html', user_context)
+    return render(request, 'user_problem_list.html', user_context)
 
 
 @login_required
 def update_user_problem(request, pk):
+
     if request.method == 'POST':
-        form = ParametersForm(request.POST, request.FILES)
+        form = UserParametersForm(request.POST, request.FILES)
         problem = UserProblem.objects.get(pk=pk)
-        params = UserProblemParameters()
-        print()
+        # params = ProblemParameters()
+
+        # if problem.parameters:
+        #     for param in problem.parameters.all():
+        #         param.delete()
+
+        if problem.parameters.first():
+            params = problem.parameters.first()
+        else:
+            params = UserProblemParameters()
+
         if form.is_valid():
             if form.cleaned_data["weights"]:
+                print('weights')
+                print(form.cleaned_data["weights"])
+
+                if problem.parameters:
+                    for param in problem.parameters.all():
+                        param.delete_weights()
+
                 w = form.cleaned_data["weights"]
                 params.weights = w
+
+                if problem.parameters.first():
+                    problem.parameters.update(weights=w)
+
             if form.cleaned_data["reference"]:
+                print('reference')
+                print(form.cleaned_data["reference"])
+                if problem.parameters:
+                    for param in problem.parameters.all():
+                        param.delete_reference()
+
                 ref = form.cleaned_data["reference"]
                 params.reference = ref
+
+                if problem.parameters.first():
+                    problem.parameters.update(reference=ref)
+
             params.save()
-            problem.parameters.add(params)
 
-            # create new problem only if new weights file is uploaded
-            if params.weights:
-                # w_path = settings.MEDIA_ROOT + '/problems/parameters/weights/'
-                w_path = '/problems/parameters/weights/'
-                # w_name = os.path.basename(params.weights.path)
-                w_name = params.weights.url
-                # weights = read_txt(w_path, w_name)
+            if not problem.parameters.first():
+                problem.parameters.add(params)
 
-                # TODO: change problem update functionality
-                # new_p = create_user_gurobi_problem(request, pk, weights)
-                # new_p.parameters.add(params)
-
-            # TODO: update problem reference
-
-            return redirect('user_problems')
+            # problem.parameters.add(params)
+            print(problem.parameters.all())
+            return redirect('user_problem_list')
     else:
         form = ParametersForm()
     return render(request, 'update_user_problem.html', {
         'form': form
     })
+
+
+@login_required
+def download_zip(request, pk):
+    problem = UserProblem.objects.get(pk=pk)
+    zfname = 'Chebyshev_' + str(problem.id) + '.zip'
+    zf = ZipFile(zfname, 'w')
+
+    if request.method == 'POST':
+        for ch in problem.chebyshev.all():
+            ch_url = ch.chebyshev.url
+            ch_name = ch.chebyshev.name.split('/')[2]
+            in_memory_file = requests.get(ch_url, stream=True)
+            zf.writestr(ch_name, in_memory_file.text)
+
+    zf.close()
+
+    z = open(zfname, "rb")
+    problem.zips = File(z)
+    problem.save()
+    z.close()
+    os.remove(zfname)
+
+    return redirect(problem.zips.url)
+
+
+@login_required
+def get_user_context(request):
+    problems = UserProblem.objects.filter(user=request.user)
+    print(request.user.id)
+    problems_neos = problems.filter(solver="NEOS")
+    problems_cbc = problems.filter(solver="CBC")
+
+    user_context = {
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_cbc': problems_cbc,
+    }
+
+    return user_context

@@ -1,16 +1,11 @@
-import io
 import time
 import sys
 import uuid
 
 from django.core.files.base import ContentFile, File
-from django.conf import settings
+from django_q.tasks import async_task
 
-# from .view_anonymous_gurobi import create_gurobi_problem
-from django.core.files.temp import NamedTemporaryFile
-from django.http import HttpResponse, FileResponse
-
-from ..utilities.file_helper import read_txt, save_files, get_context
+from ..utilities.scalarization import submit_cbc
 
 try:
     import xmlrpc.client as xmlrpclib
@@ -26,30 +21,28 @@ from ..models import Problem, ProblemParameters
 import os
 import requests
 from zipfile import ZipFile
-from boto3 import *
 
 
-# optimization
-# anonymous user
+# Anonymous user
 def problem_list(request):
     context = get_context()
 
     return render(request, 'problem_list.html', context)
 
 
-def upload_problem(request):
-
-    if request.method == 'POST':
-        form = ProblemForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-
-            return redirect('problem_list')
-    else:
-        form = ProblemForm()
-    return render(request, 'upload_problem.html', {
-        'form': form
-    })
+# def upload_problem(request):
+#
+#     if request.method == 'POST':
+#         form = ProblemForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             form.save()
+#
+#             return redirect('problem_list')
+#     else:
+#         form = ProblemForm()
+#     return render(request, 'upload_problem.html', {
+#         'form': form
+#     })
 
 
 def upload_problem_parameters(request):
@@ -59,13 +52,13 @@ def upload_problem_parameters(request):
         parameters_form = ParametersForm(request.POST, request.FILES)
 
         if problem_form.is_valid() and parameters_form.is_valid():
-            t = problem_form.cleaned_data["title"]
+
             xml = problem_form.cleaned_data["xml"]
             solver = problem_form.cleaned_data["solver"]
 
             xml.name = f'{xml.name.split(".")[0]}_{uuid.uuid4()}.lp'
             print(xml.name)
-            p = Problem(title=t, xml=xml, solver=solver)
+            p = Problem(xml=xml, solver=solver)
             p.save()
 
             params = ProblemParameters()
@@ -153,6 +146,19 @@ def submit_problem(request, pk):
     context = get_context()
     context.update({'solver': solver})
 
+    return render(request, 'problem_list.html', context)
+
+
+def submit_cbc_problem(request, pk):
+    problem = Problem.objects.get(pk=pk)
+
+    slvr = problem.solver
+
+    if request.method == 'POST':
+        async_task(submit_cbc, problem, 0)
+
+    context = get_context()
+    context.update({'solver': slvr})
     return render(request, 'problem_list.html', context)
 
 
@@ -320,4 +326,15 @@ def download_zip(request, pk):
     return redirect(problem.zips.url)
 
 
+def get_context():
+    problems = Problem.objects.all()
+    problems_neos = problems.filter(solver="NEOS")
+    problems_cbc = problems.filter(solver="CBC")
 
+    context = {
+        'problems': problems,
+        'problems_neos': problems_neos,
+        'problems_cbc': problems_cbc,
+    }
+
+    return context

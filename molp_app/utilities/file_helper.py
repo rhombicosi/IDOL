@@ -3,13 +3,8 @@ from pathlib import Path
 import os
 from datetime import datetime
 
-from io import BytesIO
-import zipfile
-
 from django.conf import settings
 from django.core.files import File
-
-from molp_app.models import Problem, UserProblem
 
 
 def read_txt(path, file):
@@ -84,29 +79,3 @@ def save_files(filename, filepath, extension, field, entity, model=None, content
     return settings.MEDIA_ROOT + filepath, f_path
 
 
-def get_context():
-    problems = Problem.objects.all()
-    problems_neos = problems.filter(solver="NEOS")
-    problems_cbc = problems.filter(solver="CBC")
-
-    context = {
-        'problems': problems,
-        'problems_neos': problems_neos,
-        'problems_cbc': problems_cbc,
-    }
-
-    return context
-
-
-def get_user_context(request):
-    problems = UserProblem.objects.filter(user=request.user)
-    problems_neos = problems.filter(solver="NEOS")
-    problems_cbc = problems.filter(solver="CBC")
-
-    user_context = {
-        'problems': problems,
-        'problems_neos': problems_neos,
-        'problems_cbc': problems_cbc,
-    }
-
-    return user_context
