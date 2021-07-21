@@ -149,6 +149,7 @@ def submit_user_problem(request, pk):
 @login_required
 def submit_user_cbc_problem(request, pk):
     problem = UserProblem.objects.get(pk=pk)
+
     slvr = problem.solver
 
     if request.method == 'POST':

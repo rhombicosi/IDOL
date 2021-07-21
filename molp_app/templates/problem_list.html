@@ -26,7 +26,7 @@
           <th>Weights</th>
           <th>Reference</th>
           <th>Chebyshev</th>
-          <th>Result</th>
+          <th>Status</th>
           <th>Delete</th>
         </tr>
       </thead>
@@ -38,7 +38,7 @@
               <a class="btn btn-link" href="{{ problem.xml.url }}">{{ problem.file_name }}</a>
             </td>
             <td>
-              <form method="post" action="{% url 'submit_cbc_problem' problem.pk %}">
+              <form method="post" action="{% url 'submit_cbc_problem_celery' problem.pk %}">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-primary btn-sm">Submit Problem</button>
               </form>
@@ -64,14 +64,15 @@
               {% if problem.chebyshev.last %}
                 <form method="post" action="{% url 'download_zip' problem.pk %}">
                   {% csrf_token %}
-                  <button type="submit" class="btn btn-dark btn-sm">Download Zip</button>
+                  <button id="download-ch-{{problem.pk}}" style="display: inline;" type="submit" class="btn btn-dark btn-sm">Download Zip</button>
                 </form>
               {% endif %}
             </td>
             <td>
-              {% if problem.result %}
-                <a href="{{ problem.result.url }}" class="btn btn-primary btn-sm" target="_blank">Download Result</a>
-              {% endif %}
+              <a id="process-raw-data-{{problem.pk}}"></a>
+              <div class="progress">
+                <div id="progress-bar-{{problem.pk}}" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
             </td>
             <td>
               <form method="post" action="{% url 'delete_problem' problem.pk %}">

@@ -1,9 +1,15 @@
 import time
 import sys
 import uuid
+import json
+
+from celery.result import AsyncResult
+from django.http import HttpResponse
 
 from django.core.files.base import ContentFile, File
 from django_q.tasks import async_task
+
+from django.core import serializers
 
 from ..utilities.scalarization import submit_cbc
 
@@ -15,7 +21,7 @@ except ImportError:
 from django.shortcuts import render, redirect
 
 from ..forms import ProblemForm, ParametersForm
-from ..models import Problem, ProblemParameters
+from ..models import Problem, ProblemParameters, UserProblemChebyshev, ProblemChebyshev
 
 # from gurobipy import os
 import os
@@ -92,6 +98,7 @@ def upload_problem_parameters(request):
     })
 
 
+# deprecated
 def submit_problem(request, pk):
     problem = Problem.objects.get(pk=pk)
     solver = problem.solver
@@ -160,6 +167,40 @@ def submit_cbc_problem(request, pk):
     context = get_context()
     context.update({'solver': slvr})
     return render(request, 'problem_list.html', context)
+
+
+def submit_cbc_problem_celery(request, pk):
+    problem = Problem.objects.get(pk=pk)
+    slvr = problem.solver
+
+    p = serializers.serialize('json', [problem])
+    p = json.loads(p)
+    p_id = p[0]['pk']
+    print(p_id)
+
+    if request.method == 'POST':
+        task = submit_cbc.delay(p_id, 0)
+        print(task.status)
+        print(task.id)
+
+    context = get_context()
+    context.update({'solver': slvr,
+                    'task_id': task.id,
+                    'problem_id': p_id},)
+    return render(request, 'problem_list.html', context)
+
+
+def get_task_info(request):
+    task_id = request.GET.get('task_id', None)
+    if task_id is not None:
+        task = AsyncResult(task_id)
+        data = {
+            'state': task.state,
+            'result': task.result,
+        }
+        return HttpResponse(json.dumps(data), content_type='application/json')
+    else:
+        return HttpResponse('No job id given.')
 
 
 def status_problem(request, pk):

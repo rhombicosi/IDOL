@@ -1,3 +1,10 @@
+# Celery
+from celery import shared_task
+# Celery-progress
+from celery_progress.backend import ProgressRecorder
+# Task imports
+import time
+
 from django.conf import settings
 
 from django.core.files.temp import NamedTemporaryFile
@@ -18,7 +25,7 @@ from shutil import copyfile
 
 import boto3
 
-from molp_app.models import ProblemChebyshev, UserProblemChebyshev
+from molp_app.models import ProblemChebyshev, UserProblemChebyshev, Problem, UserProblem
 
 s3 = boto3.resource('s3')
 
@@ -186,9 +193,15 @@ def calculate_reference(num_of_obj, models):
     
     return ystar
 
-
 # generates chebyshev scalarization
-def submit_cbc(problem, user):
+@shared_task(bind=True)
+def submit_cbc(self, pk, user):
+
+    if user:
+        problem = UserProblem.objects.get(pk=pk)
+    else:
+        problem = Problem.objects.get(pk=pk)
+    slvr = problem.solver
     print("Scalarization task has been started")
     timestr, num_of_obj, models = parse_gurobi_url(problem)
 

@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 
-import django_heroku
+# import django_heroku
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 from decouple import config, Csv
@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'molp_app',
     'django_q',
     'storages',
+    'celery',
+    'celery_progress',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -160,6 +162,10 @@ Q_CLUSTER = {
     'redis': config('REDIS_URL')
 }
 
+# Celery Settings
+BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
@@ -179,4 +185,4 @@ AWS_LOCATION = 'static'
 
 DEFAULT_FILE_STORAGE = 'molp_project.storage_backends.MediaStorage'
 
-django_heroku.settings(locals())
+# django_heroku.settings(locals())

@@ -11,10 +11,14 @@ urlpatterns = [
     re_path(r'^problems/$', view_anonymous.problem_list, name='problem_list'),
     re_path(r'^problems/upload/$', view_anonymous.upload_problem_parameters, name='upload_problem_parameters'),
     path('problems/submit/<int:pk>/', view_anonymous.submit_problem, name='submit_problem'),
-    path('problems/submit_cbc/<int:pk>/', molp_app.views.view_anonymous.submit_cbc_problem, name='submit_cbc_problem'),
+    path('problems/submit_cbc/<int:pk>/', molp_app.views.view_anonymous.submit_cbc_problem_celery, name='submit_cbc_problem_celery'),
+
     path('problems/status/<int:pk>/', view_anonymous.status_problem, name='status_problem'),
     path('problems/result/<int:pk>/', view_anonymous.read_result, name='read_result'),
+    path('problems/get-task-info/', view_anonymous.get_task_info, name='get_task_info'),
+
     path('problems/delete/<int:pk>/', view_anonymous.delete_problem, name='delete_problem'),
+
     path('signup/', view_common.signup, name='signup'),
     re_path(r'^user_problem_list/$', view_user.user_problem_list, name='user_problem_list'),
     re_path(r'^user_problem_list/upload/$', view_user.upload_user_problem_parameters, name='upload_user_problem_parameters'),
@@ -32,7 +36,7 @@ urlpatterns = [
     path('problem/update/<int:pk>/', view_anonymous.update_problem, name='update_problem'),
 
     path('problem/download/<int:pk>/', view_anonymous.download_zip, name='download_zip'),
-    path('user_problem/download/<int:pk>/', view_user.download_zip, name='download_zip'),
+    path('user_problem/download/<int:pk>/', view_user.download_zip, name='user_download_zip'),
 ]
 
 if settings.DEBUG:
