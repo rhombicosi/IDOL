@@ -16,9 +16,9 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.conf.task_track_started = True
 
 app.conf.beat_schedule = {
-    'get_tasks_10s': {
+    'get_tasks_1s': {
         'task': 'molp_app.utilities.scalarization.get_tasks_info',
-        'schedule': 10.0
+        'schedule': 1.0
     }
 }
 # Load task modules from all registered Django app configs.
