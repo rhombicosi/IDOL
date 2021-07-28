@@ -61,7 +61,7 @@ pylint==2.6.0
 pyOpenSSL==20.0.1
 python-dateutil==2.8.1
 python-decouple==3.4
-pytz @ file:///tmp/build/80754af9/pytz_1612215392582/work
+pytz==2021.1
 redis==3.5.3
 requests==2.25.1
 s3transfer==0.4.2
