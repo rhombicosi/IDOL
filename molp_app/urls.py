@@ -15,7 +15,7 @@ urlpatterns = [
 
     path('problems/status/<int:pk>/', view_anonymous.status_problem, name='status_problem'),
     path('problems/result/<int:pk>/', view_anonymous.read_result, name='read_result'),
-    path('problems/get-task-info/', view_anonymous.get_task_info, name='get_task_info'),
+    # path('problems/get-task-info/', view_anonymous.get_task_info, name='get_task_info'),
 
     path('problems/delete/<int:pk>/', view_anonymous.delete_problem, name='delete_problem'),
 

@@ -10,6 +10,7 @@ from django.core.files.base import ContentFile, File
 from django_q.tasks import async_task
 
 from django.core import serializers
+from django.db import transaction
 
 from ..utilities.scalarization import submit_cbc
 
@@ -179,28 +180,28 @@ def submit_cbc_problem_celery(request, pk):
     print(p_id)
 
     if request.method == 'POST':
-        task = submit_cbc.delay(p_id, 0)
-        print(task.status)
-        print(task.id)
+        transaction.on_commit(lambda: submit_cbc.delay(p_id, 0))
+        # print(task.status)
+        # print(task.id)
 
     context = get_context()
     context.update({'solver': slvr,
-                    'task_id': task.id,
                     'problem_id': p_id},)
     return render(request, 'problem_list.html', context)
 
 
-def get_task_info(request):
-    task_id = request.GET.get('task_id', None)
-    if task_id is not None:
-        task = AsyncResult(task_id)
-        data = {
-            'state': task.state,
-            'result': task.result,
-        }
-        return HttpResponse(json.dumps(data), content_type='application/json')
-    else:
-        return HttpResponse('No job id given.')
+# def get_task_info(request):
+#     task_id = request.GET.get('task_id', None)
+#
+#     if task_id is not None:
+#         task = AsyncResult(task_id)
+#         data = {
+#             'state': task.state,
+#             'result': task.result,
+#         }
+#         return HttpResponse(json.dumps(data), content_type='application/json')
+#     else:
+#         return HttpResponse('No job id given.')
 
 
 def status_problem(request, pk):

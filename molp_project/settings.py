@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'storages',
     'celery',
     'celery_progress',
+    'channels'
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -77,15 +78,38 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'molp_project.wsgi.application'
-
+ASGI_APPLICATION = 'molp_project.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#         'OPTIONS': {
+#             'timeout': 120,
+#         }
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'molp',
+        'USER': 'postgres',
+        'PASSWORD': config('POSTGRE_PASSWORD'),
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
+    }
+}
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [config('REDIS_URL')]
+        }
     }
 }
 
@@ -163,9 +187,10 @@ Q_CLUSTER = {
 }
 
 # Celery Settings
-BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_BROKER_URL = config('REDIS_URL')
+CELERY_RESULT_BACKEND = config('REDIS_URL')
 
+# S3
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')

@@ -64,15 +64,14 @@
               {% if problem.chebyshev.last %}
                 <form method="post" action="{% url 'download_zip' problem.pk %}">
                   {% csrf_token %}
-                  <button id="download-ch-{{problem.pk}}" style="display: inline;" type="submit" class="btn btn-dark btn-sm">Download Zip</button>
+                  <button id="download-ch-{{problem.pk}}" style="{% if problem.task_status == 'SUCCESS' %} display: inline; {% else %} display: none; {% endif %}" type="submit" class="btn btn-dark btn-sm">Download Zip</button>
                 </form>
               {% endif %}
             </td>
             <td>
-              <a id="process-raw-data-{{problem.pk}}"></a>
-              <div class="progress">
-                <div id="progress-bar-{{problem.pk}}" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
+              {% if problem.task_status %}
+                <a id="process-raw-data-{{problem.pk}}">{{problem.task_status}}</a>
+              {% endif %}
             </td>
             <td>
               <form method="post" action="{% url 'delete_problem' problem.pk %}">

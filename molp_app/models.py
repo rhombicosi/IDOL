@@ -24,6 +24,9 @@ class Problem(models.Model):
     # common fields
     result = models.FileField(upload_to='problems/solutions/', blank=True)
 
+    task_id = models.CharField(max_length=50, null=True, blank=True)
+    task_status = models.CharField(max_length=50, null=True, blank=True)
+
     def delete(self, *args, **kwargs):
         self.xml.delete()
         self.result.delete()
@@ -87,6 +90,9 @@ class UserProblem(models.Model):
 
     # common fields
     result = models.FileField(upload_to='problems/solutions/', blank=True)
+
+    task_id = models.CharField(max_length=50, null=True, blank=True)
+    task_status = models.CharField(max_length=50, null=True, blank=True)
 
     def delete(self, *args, **kwargs):
         self.xml.delete()

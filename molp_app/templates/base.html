@@ -92,45 +92,34 @@
       <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
       <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 
-      {% if task_id %}
-      <script type="text/javascript">
-        var taskid = "{{task_id}}";
-        var a = $('#process-raw-data-{{problem_id}}')
-        var dwnldbtn = $('#download-ch-{{problem_id}}');
+      <script>
+        var socket = new WebSocket('ws://localhost:8000/ws/scalarizations/')
+        console.log('we are in scalarization')
 
-        get_task_info(taskid);
+        socket.onmessage = function(events){
+          var tasks = event.data;
+          tasks = JSON.parse(tasks)
+          console.log(tasks)
 
-        function get_task_info(tid) {
-          $.ajax({
-            type: 'get',
-            url: '/problems/get-task-info/',
-            data: {'task_id': tid},
-            success: function (data) {
-              a.html(data.state)
-              if (data.state == 'PENDING') {
-                dwnldbtn.css('display', 'none');
-                a.html(data.state);
-              }
-              else if (data.state == 'STARTED') {
-                a.html(data.state);
-              }
-              else if(data.state == 'SUCCESS'){
-                a.html(data.state);
-                dwnldbtn.css('display', 'inline');
-              }
-              if (data.state != 'SUCCESS') {
-                setTimeout(function () {
-                  get_task_info(tid)
-                }, 100);
-              }
-            },
-            error: function (data) {
-                a.html("error!");
+          for (let i = 0; i < tasks.length; i++) {
+            problem_id = tasks[i].problem_pk
+            status = tasks[i].task_status
+
+            var a = $('#process-raw-data-'+problem_id);
+            var dwnldbtn = $('#download-ch-'+problem_id);
+
+            a.html(status);
+
+            if (status != 'SUCCESS') {
+              dwnldbtn.css('display', 'none');
             }
-          });
+            else if (status == 'SUCCESS') {
+              dwnldbtn.css('display', 'inline');
+            }
+
+          }
         }
       </script>
-      {% endif %}
 
     </body>
 </html>

@@ -2,7 +2,7 @@
 ## **Web Service Idol description**
 Web Service Idol is a tool for generating Chebyshev scalarization to solve multiobjective linear optimization problems.
 
-As of now Idol accepts exclusively Gurobi multiobjective .lp format (see Gurobi lp format [documentation](https://www.gurobi.com/documentation/9.0/refman/lp_format.html#format:LP) and returns scalarized problem as an .lp file.
+As of now Idol accepts exclusively Gurobi multiobjective .lp format (see Gurobi lp format [documentation](https://www.gurobi.com/documentation/9.0/refman/lp_format.html#format:LP) )and returns scalarized problem as an .lp file.
 
 User is able to control Chebyshev scalarization output by changing weights and reference parameters.
 Idol accepts weights and reference points in form of a .txt files. Parameter values should be provided as a space separated array inside txt file.
@@ -31,7 +31,7 @@ It is possible to run the Idol on Windows and Ubuntu operating systems.
     1.  environment\Scripts\activate.bat
 1.  Install pip
 1.  Install dependencies:
-    1.  pip install -r requirements
+    1.  pip install -r requirements.txt
 1.  Get inside the project directory "molp_project" and perform database migrations
     1.  python manage.py makemigrations
     1.  python manage.py migrate
