@@ -2,3 +2,6 @@
 /molp_app/media
 db.sqlite3
 .env
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
