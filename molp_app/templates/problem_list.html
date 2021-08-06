@@ -7,141 +7,61 @@
   <a href="{% url 'upload_problem_parameters' %}" class="btn btn-primary">Upload problem</a>
 </p>
 
-<div class="nav nav-tabs nav-fill">
-  <a class="nav-item nav-link {% if solver == 'CBC' or solver == None %} active {% endif %}" data-toggle="tab" href="#cbc">CBC</a>
-  <a class="nav-item nav-link {% if solver == 'NEOS' %} active {% endif %}" data-toggle="tab" href="#neos">NEOS</a>
-</div>
-
-<div class="tab-content">
-
-  <div id="cbc" class="tab-pane fade show {% if solver == 'CBC' or solver == None %} active {% endif %}">
-    {% if problems_cbc %}
-    <table class="table mb-0">
-      <thead>
-        <tr>
-          <th>Id</th>
-          <th>Input LP</th>
-          <th>Submit</th>
-          <th>Update</th>
-          <th>Weights</th>
-          <th>Reference</th>
-          <th>Chebyshev</th>
-          <th>Status</th>
-          <th>Delete</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for problem in problems_cbc %}
-          <tr>
-            <td>{{ problem.id }}</td>
-            <td>
-              <a class="btn btn-link" href="{{ problem.xml.url }}">{{ problem.file_name }}</a>
-            </td>
-            <td>
-              <form method="post" action="{% url 'submit_cbc_problem_celery' problem.pk %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary btn-sm">Submit Problem</button>
-              </form>
-            </td>
-            <td>
-              <a href="{% url 'update_problem' problem.pk%}" class="btn btn-primary btn-sm">Update problem</a>
-            </td>
-            <td>
-              {% if problem.parameters.first.weights %}
-                <a> + </a>
-              {% else %}
-                <a> - </a>
-              {% endif %}
-            </td>
-            <td>
-              {% if problem.parameters.first.reference %}
-                <a> + </a>
-              {% else %}
-                <a> - </a>
-              {% endif %}
-            </td>
-            <td>
-              {% if problem.chebyshev.last %}
-                <form method="post" action="{% url 'download_zip' problem.pk %}">
-                  {% csrf_token %}
-                  <button id="download-ch-{{problem.pk}}" style="{% if problem.task_status == 'SUCCESS' %} display: inline; {% else %} display: none; {% endif %}" type="submit" class="btn btn-dark btn-sm">Download Zip</button>
-                </form>
-              {% endif %}
-            </td>
-            <td>
-              {% if problem.task_status %}
-                <a id="process-raw-data-{{problem.pk}}">{{problem.task_status}}</a>
-              {% endif %}
-            </td>
-            <td>
-              <form method="post" action="{% url 'delete_problem' problem.pk %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-              </form>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% endif %}
-  </div>
-
-  <div id="neos" class="tab-pane fade {% if solver == 'NEOS'%} show active {% endif %}" >
-    {% if problems_neos %}
-    <table class="table mb-0">
-      <thead>
+<table class="table mb-0">
+  <thead>
+    <tr>
+      <th>Id</th>
+      <th>Input LP</th>
+      <th>Submit</th>
+      <th>Update</th>
+      <th>Weights</th>
+      <th>Y<sup>*</sup></th>
+      <th>Chebyshev</th>
+      <th>Status</th>
+      <th>Delete</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for problem in problems %}
       <tr>
-        <th>Title</th>
-        <th>Solver</th>
-        <th>Download</th>
-        <th>Submit</th>
-        <th>Job Number</th>
-        <th></th>
-        <th>Status</th>
-        <th></th>
-        <th>Result</th>
-        <th>Delete</th>
-      </tr>
-      </thead>
-      <tbody>
-      {% for problem in problems_neos %}
-      <tr>
-        <td>{{ problem.title }}</td>
-        <td>{{ problem.solver}}</td>
+        <td>{{ problem.id }}</td>
         <td>
-          <a href="{{ problem.xml.url }}" class="btn btn-primary btn-sm" target="_blank">Download XML</a>
+          <a class="btn btn-link" href="{{ problem.xml.url }}">{{ problem.file_name }}</a>
         </td>
         <td>
           <form method="post" action="{% url 'submit_problem' problem.pk %}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-secondary btn-sm">Submit Problem</button>
+            <button type="submit" class="btn btn-primary btn-sm">Make Chebyshev</button>
           </form>
         </td>
         <td>
-          {% if problem.jobNumber %}
-          {{ problem.jobNumber }}
+          <a href="{% url 'update_problem' problem.pk%}" class="btn btn-primary btn-sm">Update problem</a>
+        </td>
+        <td>
+          {% if problem.parameters.first.weights %}
+            <a> + </a>
+          {% else %}
+            <a> - </a>
           {% endif %}
         </td>
         <td>
-          <form method="post" action="{% url 'status_problem' problem.pk %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-secondary btn-sm">Check status</button>
-          </form>
-        </td>
-        <td>
-          {% if problem.status %}
-          {{ problem.status }}
+          {% if problem.parameters.first.reference %}
+            <a> + </a>
+          {% else %}
+            <a> - </a>
           {% endif %}
         </td>
         <td>
-          <form method="post" action="{% url 'read_result' problem.pk %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-secondary btn-sm">Result</button>
-          </form>
+          {% if problem.chebyshev.last %}
+            <form method="post" action="{% url 'download_zip' problem.pk %}">
+              {% csrf_token %}
+              <button id="download-ch-{{problem.pk}}" style="{% if problem.task_status == 'SUCCESS' %} display: inline; {% else %} display: none; {% endif %}" type="submit" class="btn btn-dark btn-sm">Download Zip</button>
+            </form>
+          {% endif %}
         </td>
         <td>
-          {% if problem.result %}
-          <a href="{{ problem.result.url }}" class="btn btn-primary btn-sm" target="_blank">Download Result</a>
+          {% if problem.task_status %}
+            <a id="process-raw-data-{{problem.pk}}">{{problem.task_status}}</a>
           {% endif %}
         </td>
         <td>
@@ -151,12 +71,9 @@
           </form>
         </td>
       </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    {% endif %}
-  </div>
+    {% endfor %}
+  </tbody>
+</table>
 
-</div><!-- end tab content -->
 
 {% endblock %}

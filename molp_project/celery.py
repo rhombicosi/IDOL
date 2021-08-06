@@ -19,7 +19,12 @@ app.conf.beat_schedule = {
     'get_tasks_1s': {
         'task': 'molp_app.utilities.scalarization.get_tasks_info',
         'schedule': 1.0
+    },
+    'get_user_tasks_1s': {
+        'task': 'molp_app.utilities.scalarization.get_user_tasks_info',
+        'schedule': 1.0
     }
 }
+
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()

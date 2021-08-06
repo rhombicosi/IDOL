@@ -1,35 +1,21 @@
-# Celery
-import json
-
-from celery import shared_task
-from celery.result import AsyncResult
-# Celery-progress
-# from celery_progress.backend import ProgressRecorder
-# Task imports
-# import time
-
-from django.conf import settings
-
-from django.core.files.temp import NamedTemporaryFile
-from django.core.files import File
-
+import os
+from shutil import copyfile
+from mip import *
+import numpy as np
+import boto3
 import requests
-
 from datetime import datetime
 import errno
 
-from django.http import HttpResponse
-from mip import *
-import numpy as np
+from celery import shared_task
+from celery.result import AsyncResult
 
-import os
-from shutil import copyfile
 
-import boto3
-
+from django.conf import settings
+from django.core.files.temp import NamedTemporaryFile
+from django.core.files import File
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-
 from molp_app.models import ProblemChebyshev, UserProblemChebyshev, Problem, UserProblem
 
 s3 = boto3.resource('s3')
@@ -199,9 +185,6 @@ def calculate_reference(num_of_obj, models):
     return ystar
 
 
-channel_layer = get_channel_layer()
-
-
 # generates chebyshev scalarization
 @shared_task(bind=True)
 def submit_cbc(self, pk, user):
@@ -300,8 +283,8 @@ def submit_cbc(self, pk, user):
 
             problem.save()
 
-            # message = {'type': 'send_scalarizations', 'task_id': task_id, 'problem_pk': pk, 'task_status': 'SUCCESS'}
-            # async_to_sync(channel_layer.group_send)('scalarizations', message)
+
+channel_layer = get_channel_layer()
 
 
 @shared_task
@@ -316,6 +299,20 @@ def get_tasks_info():
             tasks_info.append({'task_id': p.task_id, 'task_status': p.task_status, 'problem_pk': p.id})
 
     async_to_sync(channel_layer.group_send)('scalarizations', {'type': 'send_scalarizations', 'text': tasks_info})
+
+
+@shared_task
+def get_user_tasks_info():
+    problems = UserProblem.objects.all()
+
+    tasks_info = []
+    for p in problems:
+        if p.task_id:
+            p.task_status = AsyncResult(p.task_id).status
+            p.save()
+            tasks_info.append({'task_id': p.task_id, 'task_status': p.task_status, 'problem_pk': p.id})
+
+    async_to_sync(channel_layer.group_send)('user_scalarizations', {'type': 'send_user_scalarizations', 'text': tasks_info})
 
 
 # working with files locally

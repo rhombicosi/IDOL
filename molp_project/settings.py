@@ -13,13 +13,10 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 import dj_database_url
 
-# import django_heroku
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 from decouple import config, Csv
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -27,7 +24,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', cast=bool)
 
-# ALLOWED_HOSTS = ['localhost', '.herokuapp.com']
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
 # Application definition
@@ -40,10 +36,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'crispy_forms',
     'molp_app',
-    'django_q',
     'storages',
     'celery',
-    'celery_progress',
     'channels'
 ]
 
@@ -84,36 +78,16 @@ ASGI_APPLICATION = 'molp_project.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#         'OPTIONS': {
-#             'timeout': 120,
-#         }
-#     }
-# }
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'molp',
         'USER': 'postgres',
-        'PASSWORD': 'wipeOUT',
+        'PASSWORD': config('POSTGRE_PASSWORD'),
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
 }
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'molp',
-#         'USER': 'postgres',
-#         'PASSWORD': config('POSTGRE_PASSWORD'),
-#         'HOST': 'localhost'
-#     }
-# }
 
 db_from_env = dj_database_url.config(conn_max_age=600)
 DATABASES['default'].update(db_from_env)
@@ -182,23 +156,7 @@ MEDIA_URL = '/media/'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-Q_CLUSTER = {
-    'name': 'django_q_django',
-    'workers': 8,
-    'recycle': 500,
-    'retry': 330,
-    'timeout': 300,
-    'compress': True,
-    'save_limit': 250,
-    'queue_limit': 500,
-    'cpu_affinity': 1,
-    'label': 'Django Q',
-    'redis': config('REDIS_URL')
-}
 
 # Celery Settings
 CELERY_BROKER_URL = config('REDIS_URL')

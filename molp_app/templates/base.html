@@ -118,7 +118,36 @@
               dwnldbtn.css('display', 'inline');
               a.html(status);
             }
+          }
+        }
+      </script>
 
+      <script>
+        var user_socket = new WebSocket('ws://' + window.location.host + '/ws/user_scalarizations/')
+        console.log('we are in user scalarization')
+
+        user_socket.onmessage = function(events){
+          var tasks = event.data;
+          tasks = JSON.parse(tasks)
+          console.log(tasks)
+
+          for (let i = 0; i < tasks.length; i++) {
+            problem_id = tasks[i].problem_pk
+            status = tasks[i].task_status
+
+            var a = $('#process-raw-data-user-'+problem_id);
+            var dwnldbtn = $('#download-ch-user-'+problem_id);
+
+            a.html(status);
+
+            if (status != 'SUCCESS') {
+              dwnldbtn.css('display', 'none');
+              a.html(status);
+            }
+            else if (status == 'SUCCESS') {
+              dwnldbtn.css('display', 'inline');
+              a.html(status);
+            }
           }
         }
       </script>
