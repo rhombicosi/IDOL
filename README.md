@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 [![License](https://img.shields.io/github/license/rhombicosi/molp_project)](LICENSE)
 ![Code size](https://img.shields.io/github/languages/code-size/rhombicosi/Idol)
 ## **Web Service Idol description**
