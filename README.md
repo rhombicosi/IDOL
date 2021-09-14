@@ -139,4 +139,3 @@ Redis and Celery are available only on Linux therefore Windows setup requires WS
     1. celery -A molp_project worker --loglevel=info
 
 Now application is ready to accept scalarization tasks.
->>>>>>> 86fd65d6e9e8342edff8f7687543bb3b12253c5f
