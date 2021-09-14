@@ -83,7 +83,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'molp',
         'USER': 'postgres',
-        'PASSWORD': config('POSTGRE_PASSWORD'),
+        'PASSWORD': config('POSTGRE_PASSWORD_U'),
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }

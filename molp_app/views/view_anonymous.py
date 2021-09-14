@@ -172,7 +172,7 @@ def download_zip(request, pk):
 
 
 def get_context():
-    problems = Problem.objects.all()
+    problems = Problem.objects.order_by('id')
 
     context = {
         'problems': problems

@@ -51,17 +51,20 @@
             <a> - </a>
           {% endif %}
         </td>
-        <td>
-          {% if problem.chebyshev.last %}
+        <td>          
             <form method="post" action="{% url 'download_zip' problem.pk %}">
               {% csrf_token %}
-              <button id="download-ch-{{problem.pk}}" style="{% if problem.task_status == 'SUCCESS' %} display: inline; {% else %} display: none; {% endif %}" type="submit" class="btn btn-dark btn-sm">Download Zip</button>
-            </form>
-          {% endif %}
+              <button id="download-ch-{{problem.pk}}" 
+                style="{% if problem.chebyshev.last and problem.task_status == 'SUCCESS' %} visibility:visible; {% else %} visibility:hidden; {% endif %}"
+                type="submit"
+                class="btn btn-dark btn-sm">Download Zip</button>
+            </form>       
         </td>
         <td>
           {% if problem.task_status %}
             <a id="process-raw-data-{{problem.pk}}">{{problem.task_status}}</a>
+          {% else %}
+            <a id="process-raw-data-{{problem.pk}}">NOT SUBMITTED</a>
           {% endif %}
         </td>
         <td>

@@ -185,6 +185,7 @@ def download_zip(request, pk):
 @login_required
 def get_user_context(request):
     problems = UserProblem.objects.filter(user=request.user)
+    problems = problems.order_by('id')
 
     user_context = {
         'problems': problems

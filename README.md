@@ -1,5 +1,5 @@
 [![License](https://img.shields.io/github/license/rhombicosi/molp_project)](LICENSE)
-[![Code size](https://img.shields.io/github/languages/code-size/rhombicosi/Idol)](Code size)
+![Code size](https://img.shields.io/github/languages/code-size/rhombicosi/Idol)
 ## **Web Service Idol description**
 Web Service Idol is a tool for generating Chebyshev scalarization to solve multiobjective linear optimization problems.
 
@@ -17,8 +17,9 @@ Chebyshev scalarization is generated for all sets of parameters and provided for
 * Django 3.1
 * Redis 3.5
 * Celery 5.1
+* PostgreSQL 12
 
-The project uses SQLite database and Amazon S3 cloud for data storage.
+The project uses Amazon S3 cloud to store files.
 
 As a modelling and optimization tool Idol uses open-source Python MIP and [CBC solver](https://github.com/coin-or/Cbc).
 

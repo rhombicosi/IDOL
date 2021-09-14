@@ -10,7 +10,6 @@ import errno
 from celery import shared_task
 from celery.result import AsyncResult
 
-
 from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 from django.core.files import File
@@ -35,7 +34,7 @@ def read_url(url):
 
 
 # working with cloud storage
-# parse gurobi style multobjective lp
+# parse gurobi style multiobjective lp
 # produce problem models for each objective
 def parse_gurobi_url(problem):
 
@@ -198,7 +197,7 @@ def submit_cbc(self, pk, user):
         problem = Problem.objects.get(pk=pk)
         problem.task_id = task_id
         problem.save()
-    slvr = problem.solver
+    
     print("Scalarization task has been started")
     timestr, num_of_obj, models = parse_gurobi_url(problem)
 
@@ -208,18 +207,21 @@ def submit_cbc(self, pk, user):
     rho = 0.001
 
     # chebyshev scalarization
+    # set weights and reference
     if problem.parameters.first():
         if problem.parameters.all()[0].weights:
             weights = parse_parameters_url(problem, 'weights')
         else:
-            weights[0] = np.full(num_of_obj, 1 / num_of_obj).round(2).tolist()
+            # weights[0] = np.full(num_of_obj, 1 / num_of_obj).round(2).tolist()
+            weights[0] = np.full(num_of_obj, 1).tolist()
 
         if problem.parameters.all()[0].reference:
             ystar = parse_parameters_url(problem, 'reference')
         else:
             ystar[0] = calculate_reference(num_of_obj, models)
     else:
-        weights[0] = np.full(num_of_obj, 1 / num_of_obj).round(2).tolist()
+        # weights[0] = np.full(num_of_obj, 1 / num_of_obj).round(2).tolist()
+        weights[0] = np.full(num_of_obj, 1).tolist()
         ystar[0] = calculate_reference(num_of_obj, models)
 
     # for w in weights.items():
@@ -289,7 +291,8 @@ channel_layer = get_channel_layer()
 
 @shared_task
 def get_tasks_info():
-    problems = Problem.objects.all()
+    # problems = Problem.objects.all()
+    problems = Problem.objects.order_by('id')
 
     tasks_info = []
     for p in problems:

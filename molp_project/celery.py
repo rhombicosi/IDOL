@@ -18,11 +18,11 @@ app.conf.task_track_started = True
 app.conf.beat_schedule = {
     'get_tasks_1s': {
         'task': 'molp_app.utilities.scalarization.get_tasks_info',
-        'schedule': 1.0
+        'schedule': 0.5
     },
     'get_user_tasks_1s': {
         'task': 'molp_app.utilities.scalarization.get_user_tasks_info',
-        'schedule': 1.0
+        'schedule': 0.5
     }
 }
 
