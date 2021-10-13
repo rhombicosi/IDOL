@@ -49,7 +49,7 @@ Redis and Celery are available only on Linux therefore Windows setup requires WS
 ### **Redis**
 
 1. Install Redis the latest version
-    1. wget http://download.redis.io/releases/redis-5.0.8.tar.gz
+    1. wget http://download.redis.io/releases/redis-6.2.4.tar.gz
     1. tar xzf redis-6.2.4.tar.gz
     1. cd redis-6.2.4
     1. make
