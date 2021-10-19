@@ -69,7 +69,7 @@ Now application is ready to accept scalarization tasks.
 1.  Install python3.8-venv
 1.  Create and activate virtual environment 
     1.  python -m venv /path/to/new/virtual/environment
-    1.  environment\Scripts\activate.bat (Windows) or . environment\bin\activate (Ubuntu)
+    1.  environment\Scripts\activate.bat (Windows) or . environment/bin/activate (Ubuntu)
 1.  Install psycopg2 dependencies 
     1. sudo apt install python3-dev libpq-dev
 1.  Install dependencies:
