@@ -1,5 +1,6 @@
 /.idea
-/molp_app/media
+/.vscode
+/molp
 db.sqlite3
 .env
 celerybeat-schedule.bak
