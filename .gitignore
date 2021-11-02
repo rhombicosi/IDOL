@@ -6,6 +6,3 @@ db.sqlite3
 celerybeat-schedule.bak
 celerybeat-schedule.dat
 celerybeat-schedule.dir
-Dockerfile
-whole.json
-Idol.sh 
