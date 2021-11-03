@@ -15,7 +15,7 @@
       <th>Submit</th>
       <th>Update</th>
       <th>Weights</th>
-      <th>Y<sup>*</sup></th>
+      <th>y<sup>*</sup></th>
       <th>Chebyshev</th>
       <th>Status</th>
       <th>Delete</th>
@@ -39,16 +39,16 @@
         </td>
         <td>
           {% if problem.parameters.first.weights %}
-            <a> + </a>
+            <a class="btn btn-link" href="{{ problem.parameters.first.weights.url }}"> + </a>
           {% else %}
-            <a> - </a>
+            <a class="btn btn-link"> - </a>
           {% endif %}
         </td>
         <td>
           {% if problem.parameters.first.reference %}
-            <a> + </a>
+            <a class="btn btn-link" href="{{ problem.parameters.first.reference.url }}"> + </a>
           {% else %}
-            <a> - </a>
+            <a class="btn btn-link"> - </a>
           {% endif %}
         </td>
         <td>          
