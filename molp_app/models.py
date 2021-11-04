@@ -66,7 +66,7 @@ class UserProblem(models.Model):
         super().delete(*args, **kwargs)
 
     def file_name(self):
-        return self.xml.name.split('/')[2][:40]
+        return self.xml.name.split('/')[2][:-40]
 
 
 class UserProblemParameters(models.Model):
