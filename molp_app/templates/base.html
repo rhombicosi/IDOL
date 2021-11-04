@@ -95,9 +95,8 @@
     
       <script>
         var socket = new WebSocket('ws://' + window.location.host + '/ws/scalarizations/')
-        // console.log('we are in scalarization')
 
-        socket.onmessage = function(events){
+        socket.onmessage = function(event){
           var tasks = event.data;
           tasks = JSON.parse(tasks);
           console.log(tasks);
@@ -106,21 +105,17 @@
             problem_id = tasks[i].problem_pk;
             status = tasks[i].task_status;
 
-            var a = $('#process-raw-data-'+problem_id);
-            var dwnldbtn = $('#download-ch-'+problem_id);
-            // var dwnldbtn = document.getElementById('#download-ch-'+problem_id);
-            
+            var a = $('#process-raw-data-' + problem_id);
+            var dwnldbtn = $('#download-ch-' + problem_id);
 
             a.html(status);
 
             if (status != 'SUCCESS') {
               dwnldbtn.css('visibility', 'hidden');
-              // dwnldbtn.style.visibility = "hidden";              
               a.html(status);
             }
             else if (status == 'SUCCESS') {
               dwnldbtn.css('visibility', 'visible');
-              // dwnldbtn.style.visibility = "visible";
               a.html(status);
             }
           }
@@ -129,12 +124,10 @@
 
       <script>
         var user_socket = new WebSocket('ws://' + window.location.host + '/ws/user_scalarizations/')
-        // console.log('we are in user scalarization')
 
-        user_socket.onmessage = function(events){
+        user_socket.onmessage = function(event){
           var tasks = event.data;
           tasks = JSON.parse(tasks)
-          // console.log(tasks)
 
           for (let i = 0; i < tasks.length; i++) {
             problem_id = tasks[i].problem_pk

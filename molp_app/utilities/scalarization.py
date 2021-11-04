@@ -297,12 +297,12 @@ def get_tasks_info():
     tasks_info = []
     for p in problems:
         if p.task_id:
-            if not p.task_status:
-                p.task_status = AsyncResult(p.task_id).status
-                p.save()
+            p.task_status = AsyncResult(p.task_id).status
+
             if p.task_status == 'PENDING':
                 p.task_status = 'Press the "Make Chebyshev" button'
-                p.save()
+                
+            p.save()
             tasks_info.append({'task_id': p.task_id, 'task_status': p.task_status, 'problem_pk': p.id})
 
     async_to_sync(channel_layer.group_send)('scalarizations', {'type': 'send_scalarizations', 'text': tasks_info})
@@ -315,12 +315,12 @@ def get_user_tasks_info():
     tasks_info = []
     for p in problems:
         if p.task_id:
-            if not p.task_status:
-                p.task_status = AsyncResult(p.task_id).status
-                p.save()
+            p.task_status = AsyncResult(p.task_id).status
+
             if p.task_status == 'PENDING':
                 p.task_status = 'Press the "Make Chebyshev" button'
-                p.save()
+
+            p.save()            
             tasks_info.append({'task_id': p.task_id, 'task_status': p.task_status, 'problem_pk': p.id})
 
     async_to_sync(channel_layer.group_send)('user_scalarizations', {'type': 'send_user_scalarizations', 'text': tasks_info})
