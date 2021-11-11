@@ -81,9 +81,9 @@ ASGI_APPLICATION = 'molp_project.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'molp',
-        'USER': 'postgres',
-        'PASSWORD': config('POSTGRE_PASSWORD_U'),
+        'NAME': config('POSTGRE_NAME'),
+        'USER': config('POSTGRE_USER'),
+        'PASSWORD': config('POSTGRE_PASSWORD'),
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }

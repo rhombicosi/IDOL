@@ -24,44 +24,7 @@ The project uses Amazon S3 cloud to store files.
 
 As a modelling and optimization tool Idol uses open-source Python MIP and [CBC solver](https://github.com/coin-or/Cbc).
 
-## **Running project on Ubuntu 20.04 server**
-
-### **PostgreSQL-12 setup**
-
-1.  Install PostgreSQL
-    1. sudo apt install postgresql postgresql-contrib
-1.  Create database
-    1.  sudo -u postgres createdb molp
-1.  Start service
-    1.  sudo service postgresql start
-
-### **Redis**
-
-1. Install Redis the latest version
-    1. wget http://download.redis.io/releases/redis-6.2.4.tar.gz
-    1. tar xzf redis-6.2.4.tar.gz
-    1. cd redis-6.2.4
-    1. make
-    
-1. Create a configuration file (optional)
-   1. The config file example 6379.conf can be found in the project root directory
-    
-1. Start the Redis server
-    1. sudo src/redis-server /path/to/conf/6379.conf
-
-### **Celery**
-
-1. Activate virtual environment
-1. Go to the project directory
-    1. cd /path/to/project/molp_project
-    
-1.  Start a new Celery worker with this command
-    1.  celery -A molp_project worker --loglevel=info
-
-Now application is ready to accept scalarization tasks.
-
-1. Start Celery beat
-    1.   celery -A molp_project beat -l INFO 
+## **Running project on Ubuntu 20.04**
 
 ### **Start Idol web service**
 
@@ -81,3 +44,51 @@ Now application is ready to accept scalarization tasks.
     1.  python manage.py runserver
     
 Application is available at http://127.0.0.1:8000/
+
+### **PostgreSQL-12 setup**
+
+1.  Install PostgreSQL
+    1. sudo apt install postgresql postgresql-contrib
+1.  Create database and databse user
+    1.  sudo -u postgres psql
+    1.  CREATE DATABASE \<database_name>;
+    1.  CREATE USER \<user_name> WITH PASSWORD '\<password>';
+    1.  GRANT ALL PRIVILEGES ON DATABASE \<database_name> TO \<user_name>;
+    1.  \q
+1.  Start service
+    1.  sudo service postgresql start
+
+### **Redis**
+
+1. Install Redis the latest version
+    1. sudo apt install redis
+1. Start Redis server
+    1. sudo redis-server
+
+### **Celery**
+
+1. Activate virtual environment
+1. Go to the project directory
+    1. cd /path/to/project/molp_project
+    
+1.  Start a new Celery worker with this command
+    1.  celery -A molp_project worker --loglevel=info
+
+Now application is ready to accept scalarization tasks.
+
+1. Start Celery beat
+    1.   celery -A molp_project beat -l INFO 
+
+Now application is ready to run scheduled tasks.
+
+### **Amazon S3**
+
+Follow the [guide](https://testdriven.io/blog/storing-django-static-and-media-files-on-amazon-s3/) in order to create S3 Bucket for storing django files.
+
+### **.env file**
+
+Web service environment-specific paramters should be stored in .env file. 
+
+Create .env file in the root of the project directory. .env file template is in file .env_example.
+
+

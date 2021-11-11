@@ -320,7 +320,7 @@ def get_user_tasks_info():
             if p.task_status == 'PENDING':
                 p.task_status = 'Press the "Make Chebyshev" button'
 
-            p.save()            
+            p.save()
             tasks_info.append({'task_id': p.task_id, 'task_status': p.task_status, 'problem_pk': p.id})
 
     async_to_sync(channel_layer.group_send)('user_scalarizations', {'type': 'send_user_scalarizations', 'text': tasks_info})
