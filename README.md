@@ -1,6 +1,7 @@
 
 [![License](https://img.shields.io/github/license/rhombicosi/molp_project)](LICENSE)
 ![Code size](https://img.shields.io/github/languages/code-size/rhombicosi/Idol)
+[![DOI](https://zenodo.org/badge/393465636.svg)](https://zenodo.org/badge/latestdoi/393465636)
 ## **Web Service Idol description**
 Web Service Idol is a tool for generating Chebyshev scalarization to solve multiobjective linear optimization problems.
 

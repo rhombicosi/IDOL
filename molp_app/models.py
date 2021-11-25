@@ -24,7 +24,7 @@ class Problem(models.Model):
 class ProblemParameters(models.Model):
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name="parameters", null=True)
     weights = models.FileField(upload_to='problems/parameters/weights/', blank=True)
-    reference = models.FileField(upload_to='problems/parameters/reference/', blank=True)
+    reference = models.FileField(upload_to='problems/parameters/reference/', blank=True, verbose_name="Y")
 
     def delete(self, *args, **kwargs):
         self.weights.delete()
@@ -72,7 +72,7 @@ class UserProblem(models.Model):
 class UserProblemParameters(models.Model):
     problem = models.ForeignKey(UserProblem, on_delete=models.CASCADE, related_name="parameters", null=True)
     weights = models.FileField(upload_to='problems/parameters/weights/', blank=True)
-    reference = models.FileField(upload_to='problems/parameters/reference/', blank=True)
+    reference = models.FileField(upload_to='problems/parameters/reference/', blank=True, verbose_name="Y")
 
     def delete(self, *args, **kwargs):
         self.weights.delete()

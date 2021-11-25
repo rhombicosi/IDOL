@@ -163,6 +163,7 @@ def parse_parameters_url(problem, param):
 # calculate reference if it is not provided
 def calculate_reference(num_of_obj, models):
     ystar = {}
+    epsilon = 0.1
     
     for obj in range(num_of_obj):
         m = models[obj]
@@ -173,10 +174,10 @@ def calculate_reference(num_of_obj, models):
 
         if status == OptimizationStatus.OPTIMAL:
             print('optimal solution cost {} found'.format(m.objective_value))
-            ystar[obj] = m.objective_value
+            ystar[obj] = m.objective_value + epsilon
         elif status == OptimizationStatus.FEASIBLE:
             print('sol.cost {} found, best possible: {}'.format(m.objective_value, m.objective_bound))
-            ystar[obj] = m.objective_value
+            ystar[obj] = m.objective_value + epsilon
         elif status == OptimizationStatus.NO_SOLUTION_FOUND:
             print('no feasible solution found, lower bound is: {}'.format(m.objective_bound))
             ystar[obj] = m.objective_bound

@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <title>{% block title %}MOLP Solver{% endblock %}</title>
+    <title>{% block title %}IDOL{% endblock %}</title>
     <link rel="shortcut icon" type="image/jpg" href="{% get_media_prefix %}favicon.jpg"/>
     <style type="text/css">     
 
@@ -100,7 +100,6 @@
         socket.onmessage = function(event){
           var tasks = event.data;
           tasks = JSON.parse(tasks);
-          console.log(tasks);
 
           for (let i = 0; i < tasks.length; i++) {
             problem_id = tasks[i].problem_pk;
