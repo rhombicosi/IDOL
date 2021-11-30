@@ -1,4 +1,3 @@
-from shutil import copyfile
 from mip import *
 import numpy as np
 import boto3
@@ -8,7 +7,6 @@ from datetime import datetime
 from celery import shared_task
 from celery.result import AsyncResult
 
-from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 from django.core.files import File
 from asgiref.sync import async_to_sync
@@ -102,7 +100,7 @@ def parse_gurobi_url(problem):
 
     for obj in range(num_of_obj):
 
-        problem_lp_path = NamedTemporaryFile(mode='wt', suffix='.lp', \
+        problem_lp_path = NamedTemporaryFile(mode='wt', suffix='.lp',
             prefix="new_problem_" + str(obj) + "_" + timestr)
         problem_temp_files.append(problem_lp_path)
         f1 = open(problem_lp_path.name, 'a+')

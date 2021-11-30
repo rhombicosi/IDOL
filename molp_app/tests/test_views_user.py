@@ -49,9 +49,11 @@ class TestUserViews(TestCase):
 
         response = self.client.post(
             self.upload_user_problem_parameters, 
-            {'lp': self.lp_file, 
-             'weights': self.w_file
-            })
+            {
+                'lp': self.lp_file, 
+                'weights': self.w_file
+            }
+        )
         
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'user_problem_list.html')
@@ -60,10 +62,12 @@ class TestUserViews(TestCase):
 
         response = self.client.post(
             self.upload_user_problem_parameters, 
-            {'lp': self.lp_file, 
-             'weights': self.w_file,
-             'reference': self.y_file
-            })
+            {
+                'lp': self.lp_file, 
+                'weights': self.w_file,
+                'reference': self.y_file
+            }
+        )
         
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'user_problem_list.html')
@@ -188,6 +192,3 @@ class TestCeleryUserViews(SimpleTestCase):
         self.assertEquals(self.problem.chebyshev.count(), 1)
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'user_problem_list.html')
-    
-    def tearDown(self):
-        self.celery_worker.__exit__(None, None, None)

@@ -42,9 +42,11 @@ class TestViews(TestCase):
 
         response = self.client.post(
             self.upload_problem_parameters, 
-            {'lp': self.lp_file, 
-             'weights': self.w_file
-            })
+            {
+                'lp': self.lp_file, 
+                'weights': self.w_file
+            }
+        )
         
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'problem_list.html')
@@ -53,10 +55,12 @@ class TestViews(TestCase):
 
         response = self.client.post(
             self.upload_problem_parameters, 
-            {'lp': self.lp_file, 
-             'weights': self.w_file,
-             'reference': self.y_file
-            })
+            {
+                'lp': self.lp_file, 
+                'weights': self.w_file,
+                'reference': self.y_file
+            }
+        )
         
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'problem_list.html')
