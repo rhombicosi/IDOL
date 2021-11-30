@@ -26,7 +26,7 @@
         <tr>
           <td>{{ problem.id }}</td>
           <td>
-          <a class="btn btn-link" href="{{ problem.xml.url }}">{{ problem.file_name }}</a>
+          <a class="btn btn-link" href="{{ problem.lp.url }}">{{ problem.file_name }}</a>
           </td>
           <td>
             <form method="post" action="{% url 'submit_user_problem' problem.pk %}">
@@ -38,15 +38,15 @@
             <a href="{% url 'update_user_problem' problem.pk%}" class="btn btn-primary btn-sm">Update problem</a>
           </td>
           <td>
-          {% if problem.parameters.first.weights %}
-            <a class="btn btn-link" href="{{ problem.parameters.first.weights.url }}"> + </a>
-          {% else %}
-            <a class="btn btn-link"> - </a>
-          {% endif %}
+            {% if problem.parameters.first.weights %}
+              <a class="btn btn-link" target="_blank" href="{{ problem.parameters.first.weights.url }}"> + </a>
+            {% else %}
+              <a class="btn btn-link"> - </a>
+            {% endif %}
           </td>
           <td>
             {% if problem.parameters.first.reference %}
-              <a class="btn btn-link" href="{{ problem.parameters.first.refernce.url }}"> + </a>
+              <a class="btn btn-link" target="_blank" href="{{ problem.parameters.first.reference.url }}"> + </a>
             {% else %}
               <a class="btn btn-link"> - </a>
             {% endif %}

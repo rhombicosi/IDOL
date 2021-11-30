@@ -1,10 +1,5 @@
 from django.contrib.auth.forms import UserCreationForm
 
-try:
-    import xmlrpc.client as xmlrpclib
-except ImportError:
-    import xmlrpclib
-
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 

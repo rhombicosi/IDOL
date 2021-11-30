@@ -5,7 +5,7 @@ from .models import Problem, ProblemParameters, UserProblem, UserProblemParamete
 class ProblemForm(forms.ModelForm):
     class Meta:
         model = Problem
-        fields = ('xml',)
+        fields = ('lp',)
 
 
 class ParametersForm(forms.ModelForm):
@@ -17,7 +17,7 @@ class ParametersForm(forms.ModelForm):
 class UserProblemForm(forms.ModelForm):
     class Meta:
         model = UserProblem
-        fields = ('xml',)
+        fields = ('lp',)
 
 
 class UserParametersForm(forms.ModelForm):

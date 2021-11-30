@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Problem, ProblemParameters, ProblemChebyshev, UserProblem, UserProblemParameters, UserProblemChebyshev
+from .models import Problem, ProblemParameters, ProblemChebyshev, \
+    UserProblem, UserProblemParameters, UserProblemChebyshev
 
 admin.site.register(Problem)
 admin.site.register(ProblemParameters)

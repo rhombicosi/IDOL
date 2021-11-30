@@ -6,7 +6,7 @@
     .bgimg {
         display: block;
         text-align: center;
-        padding-top: 25%;
+        padding-top: 20%;
     }
     img {
         max-width: 25%;
@@ -18,7 +18,11 @@
 <p>
     <strong>Total users registered: </strong> {{ count }}
 </p>
+<h3>    
+    <a target="_blank" href="{% get_media_prefix %}IDOL V1.0 User Guide.pdf">IDOL V1.0 User Guide</a>
+</h3>
 <div class="bgimg">
     <img src="{% get_media_prefix %}background.jpg">
 </div>
+<p>Copyrights &copy; 2021 Department of Decision Support in the Presence of Risk SRI PAS</p>
 {% endblock %}

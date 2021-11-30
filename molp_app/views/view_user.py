@@ -30,9 +30,9 @@ def upload_user_problem_parameters(request):
 
         if problem_form.is_valid() and parameters_form.is_valid():
 
-            xml = problem_form.cleaned_data["xml"]
-            xml.name = f'{xml.name.split(".")[0]}_{uuid.uuid4()}.lp'
-            p = UserProblem(xml=xml)
+            lp = problem_form.cleaned_data["lp"]
+            lp.name = f'{lp.name.split(".")[0]}_{uuid.uuid4()}.lp'
+            p = UserProblem(lp=lp)
             p.save()
 
             params = UserProblemParameters()
@@ -41,15 +41,13 @@ def upload_user_problem_parameters(request):
                 w = parameters_form.cleaned_data["weights"]
                 params.weights = w
                 params.save()
-            # else:
-            #     save_files('weights', '/problems/parameters/weights', 'txt', 'weights', params, None, '0.5, 0.5')
+            
             if parameters_form.cleaned_data["reference"]:
                 ref = parameters_form.cleaned_data["reference"]
                 params.reference = ref
                 params.save()
 
             if parameters_form.cleaned_data["weights"] or parameters_form.cleaned_data["reference"]:
-                # params.save()
                 p.parameters.add(params)
 
             request.user.problems.add(p)
@@ -74,7 +72,6 @@ def submit_user_problem(request, pk):
     p = serializers.serialize('json', [problem])
     p = json.loads(p)
     p_id = p[0]['pk']
-    print(p_id)
 
     if request.method == 'POST':
         submit_cbc.delay(p_id, 1)
@@ -104,11 +101,6 @@ def update_user_problem(request, pk):
     if request.method == 'POST':
         form = UserParametersForm(request.POST, request.FILES)
         problem = UserProblem.objects.get(pk=pk)
-        # params = ProblemParameters()
-
-        # if problem.parameters:
-        #     for param in problem.parameters.all():
-        #         param.delete()
 
         if problem.parameters.first():
             params = problem.parameters.first()
@@ -117,9 +109,6 @@ def update_user_problem(request, pk):
 
         if form.is_valid():
             if form.cleaned_data["weights"]:
-                print('weights')
-                print(form.cleaned_data["weights"])
-
                 if problem.parameters:
                     for param in problem.parameters.all():
                         param.delete_weights()
@@ -131,8 +120,6 @@ def update_user_problem(request, pk):
                     problem.parameters.update(weights=w)
 
             if form.cleaned_data["reference"]:
-                print('reference')
-                print(form.cleaned_data["reference"])
                 if problem.parameters:
                     for param in problem.parameters.all():
                         param.delete_reference()
@@ -146,10 +133,8 @@ def update_user_problem(request, pk):
             params.save()
 
             if not problem.parameters.first():
-                problem.parameters.add(params)
-
-            # problem.parameters.add(params)
-            print(problem.parameters.all())
+                problem.parameters.add(params)                
+            
             return redirect('user_problem_list')
     else:
         form = ParametersForm()
@@ -159,7 +144,7 @@ def update_user_problem(request, pk):
 
 
 @login_required
-def download_zip(request, pk):
+def user_download_zip(request, pk):
     problem = UserProblem.objects.get(pk=pk)
     zfname = 'Chebyshev_' + str(problem.id) + '.zip'
     zf = ZipFile(zfname, 'w')

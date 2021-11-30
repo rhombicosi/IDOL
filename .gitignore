@@ -1,6 +1,13 @@
 /.idea
 /.vscode
 /molp
+/molp/__pycache__
+/molp_app/__pycache__
+/molp_app/migrations/__pycache__
+/molp_app/tests/__pycache__
+/molp_app/utilities/__pycache__
+/molp_app/views/__pycache__
+/molp_project/__pycache__
 db.sqlite3
 .env
 celerybeat-schedule.bak
