@@ -124,7 +124,7 @@ python-debian===0.1.36ubuntu1
 python-decouple==3.4
 python-memcached==1.58
 pytz==2020.1
-PyYAML==5.3.1
+PyYAML==5.4
 redis==3.5.3
 requests==2.25.1
 requests-unixsocket==0.2.0
