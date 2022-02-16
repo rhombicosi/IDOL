@@ -18,7 +18,7 @@ blinker==1.4
 boto3==1.17.92
 botocore==1.20.92
 cached-property==1.5.1
-celery==5.1.2
+celery==5.2.2
 celery-progress==0.1.1
 certifi==2021.5.30
 cffi==1.14.5
