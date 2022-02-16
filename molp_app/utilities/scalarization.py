@@ -166,7 +166,7 @@ def calculate_reference(num_of_obj, models):
         m = models[obj]
 
         # optimization with CBC
-        m.max_gap = 0.25
+        m.max_gap = 0.1
         status = m.optimize(max_seconds=90)
 
         if status == OptimizationStatus.OPTIMAL:
@@ -246,14 +246,14 @@ def submit_cbc(self, pk, user):
 
             for i in range(num_of_obj):
                 ch.add_constr(
-                    weights[k][i] * (ystar[j][i] - f[i]) + xsum(rho * (ystar[j][i] - f[i]) for i in range(num_of_obj)) <= ch.vars[
+                    -(weights[k][i] * (ystar[j][i] - f[i]) + xsum(rho * (ystar[j][i] - f[i]) for i in range(num_of_obj))) >= -ch.vars[
                         's'],
-                    'sum{}'.format(i + 1))
+                    's{}'.format(i + 1))
 
             for obj in range(num_of_obj):
                 m = models[obj]
                 o = m.objective
-                ch.add_constr(f[obj] - o == 0, 'f_constr_' + str(obj))
+                ch.add_constr(-(f[obj]-o==0), 'f' + str(obj + 1))
 
             temp_chebyshev = NamedTemporaryFile(mode='wt', suffix='.lp',
                                                 prefix="chebyshev_" + str(problem.id) + "_" + timestr)
