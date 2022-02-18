@@ -31,3 +31,9 @@ class UserParametersForm(forms.ModelForm):
         model = UserProblemParameters
         fields = ('weights', 'reference')
 
+
+class UserMaxgapForm(forms.ModelForm):
+    class Meta:
+        model = UserProblem
+        fields = ('maxgap',)
+

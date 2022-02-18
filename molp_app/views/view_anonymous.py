@@ -68,10 +68,7 @@ def submit_problem(request, pk):
     if request.method == 'POST':
 
         if maxgap_form.is_valid():
-            print('form is valid')
             maxgap = maxgap_form.cleaned_data["maxgap"]
-            print(maxgap)
-            # maxgap = request.POST.get('maxgap')
             # maxgap_form.save()
             
             problem.maxgap = maxgap

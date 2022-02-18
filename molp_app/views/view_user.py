@@ -10,7 +10,7 @@ from django.shortcuts import render, redirect
 from django.core import serializers
 
 from ..utilities.scalarization import submit_cbc
-from ..forms import ProblemForm, ParametersForm, UserProblemForm, UserParametersForm
+from ..forms import ProblemForm, ParametersForm, UserProblemForm, UserParametersForm, UserMaxgapForm
 from ..models import UserProblem, UserProblemParameters
 
 
@@ -68,13 +68,25 @@ def upload_user_problem_parameters(request):
 @login_required
 def submit_user_problem(request, pk):
     problem = UserProblem.objects.get(pk=pk)
-
-    p = serializers.serialize('json', [problem])
-    p = json.loads(p)
-    p_id = p[0]['pk']
+    user_maxgap_form = UserMaxgapForm(request.POST)
 
     if request.method == 'POST':
+
+        if user_maxgap_form.is_valid():
+            maxgap = user_maxgap_form.cleaned_data["maxgap"]
+            # user_maxgap_form.save()
+            
+            problem.maxgap = maxgap
+            problem.save()
+
+        p = serializers.serialize('json', [problem])
+        p = json.loads(p)
+        p_id = p[0]['pk']
+
         submit_cbc.delay(p_id, 1)
+    
+    else:
+        user_maxgap_form = UserMaxgapForm()        
 
     user_context = get_user_context(request)
     user_context.update({'problem_id': p_id})
@@ -172,8 +184,11 @@ def get_user_context(request):
     problems = UserProblem.objects.filter(user=request.user)
     problems = problems.order_by('id')
 
+    user_maxgap_form = UserMaxgapForm()
+
     user_context = {
-        'problems': problems
+        'problems': problems,
+        'user_maxgap_form': user_maxgap_form
     }
 
     return user_context

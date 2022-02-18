@@ -158,19 +158,18 @@ def parse_parameters_url(problem, param):
 
 
 # calculate reference if it is not provided
-def calculate_reference(num_of_obj, models, maxgap):
+def calculate_reference(num_of_obj, models, maxgap, maxtime):
     ystar = {}
     epsilon = 0.1
-
-    print(f'MAXGAP: {maxgap}')
 
     for obj in range(num_of_obj):
         m = models[obj]
 
         # optimization with CBC
         # m.max_gap = 0.1
+        # status = m.optimize(max_seconds=float('inf'))
         m.max_gap = maxgap
-        status = m.optimize(max_seconds=90)
+        status = m.optimize(max_seconds=float(maxtime))
 
         if status == OptimizationStatus.OPTIMAL:
             print('optimal solution cost {} found'.format(m.objective_value))
@@ -217,10 +216,10 @@ def submit_cbc(self, pk, user):
         if problem.parameters.all()[0].reference:
             ystar = parse_parameters_url(problem, 'reference')
         else:
-            ystar[0] = calculate_reference(num_of_obj, models, problem.maxgap)
+            ystar[0] = calculate_reference(num_of_obj, models, problem.maxgap, problem.maxtime)
     else:
         weights[0] = np.full(num_of_obj, 1).tolist()
-        ystar[0] = calculate_reference(num_of_obj, models, problem.maxgap)
+        ystar[0] = calculate_reference(num_of_obj, models, problem.maxgap, problem.maxtime)
     
     # delete previous scalarization results
     if problem.chebyshev:
