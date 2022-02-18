@@ -3,6 +3,7 @@
 /molp
 /molp/__pycache__
 /molp_app/__pycache__
+/molp_app/migrations
 /molp_app/migrations/__pycache__
 /molp_app/tests/__pycache__
 /molp_app/utilities/__pycache__

@@ -9,7 +9,7 @@ from django.core import serializers
 from django.shortcuts import render, redirect
 
 from ..utilities.scalarization import submit_cbc
-from ..forms import ProblemForm, ParametersForm
+from ..forms import MaxgapForm, ProblemForm, ParametersForm
 from ..models import Problem, ProblemParameters
 
 
@@ -63,16 +63,33 @@ def upload_problem_parameters(request):
 
 def submit_problem(request, pk):
     problem = Problem.objects.get(pk=pk)
-
-    p = serializers.serialize('json', [problem])
-    p = json.loads(p)
-    p_id = p[0]['pk']
+    maxgap_form = MaxgapForm(request.POST)
 
     if request.method == 'POST':
+
+        if maxgap_form.is_valid():
+            print('form is valid')
+            maxgap = maxgap_form.cleaned_data["maxgap"]
+            print(maxgap)
+            # maxgap = request.POST.get('maxgap')
+            # maxgap_form.save()
+            
+            problem.maxgap = maxgap
+            problem.save()
+
+        p = serializers.serialize('json', [problem])
+        p = json.loads(p)
+        p_id = p[0]['pk']
+
         submit_cbc.delay(p_id, 0)
 
+    else:
+        maxgap_form = MaxgapForm()
+
     context = get_context()
-    context.update({'problem_id': p_id})
+    context.update({
+            'problem_id': p_id
+        })
 
     return render(request, 'problem_list.html', context)
 
@@ -165,8 +182,11 @@ def download_zip(request, pk):
 def get_context():
     problems = Problem.objects.order_by('id')
 
+    maxgap_form = MaxgapForm()
+
     context = {
-        'problems': problems
+        'problems': problems,
+        'maxgap_form': maxgap_form
     }
 
     return context

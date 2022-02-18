@@ -9,6 +9,19 @@ class Problem(models.Model):
 
     task_id = models.CharField(max_length=50, null=True, blank=True)
     task_status = models.CharField(max_length=50, null=True, blank=True)
+    
+    zero = 0
+    ten = 0.1
+    quater = 0.25
+
+    MAXGAPS = [
+        (zero, '0%'),
+        (ten, '10%'),
+        (quater, '25%')
+    ]
+    
+    maxgap = models.FloatField(choices=MAXGAPS, default=ten, verbose_name="")
+
 
     def delete(self, *args, **kwargs):
         self.lp.delete()

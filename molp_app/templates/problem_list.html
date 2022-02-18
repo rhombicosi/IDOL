@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% load crispy_forms_tags %}
+
 {% block content %}
 <h2>Problems</h2>
 
@@ -29,9 +31,14 @@
           <a class="btn btn-link" href="{{ problem.lp.url }}">{{ problem.file_name }}</a>
         </td>
         <td>
-          <form method="post" action="{% url 'submit_problem' problem.pk %}">
+          <form method="post" action="{% url 'submit_problem' problem.pk %}">            
             {% csrf_token %}
-            <button type="submit" class="btn btn-primary btn-sm">Make Chebyshev</button>
+            <div style="white-space: nowrap">
+              <p style="display: inline-block;"> Max gap</p>
+              <div style="display: inline-block;">{{ maxgap_form|crispy }}</div>
+            </div>                            
+            <div style="display: inline-block"><button type="submit" class="btn btn-primary btn-sm">Make Chebyshev</button></div>
+            
           </form>
         </td>
         <td>
