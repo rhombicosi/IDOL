@@ -17,7 +17,7 @@ class ParametersForm(forms.ModelForm):
 class MaxgapForm(forms.ModelForm):
     class Meta:
         model = Problem
-        fields = ('maxgap',)
+        fields = ('maxgap', 'maxtime')
 
 
 class UserProblemForm(forms.ModelForm):
@@ -35,5 +35,5 @@ class UserParametersForm(forms.ModelForm):
 class UserMaxgapForm(forms.ModelForm):
     class Meta:
         model = UserProblem
-        fields = ('maxgap',)
+        fields = ('maxgap', 'maxtime')
 

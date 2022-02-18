@@ -20,7 +20,7 @@ class Problem(models.Model):
         (quater, '25%')
     ]
     
-    maxgap = models.FloatField(choices=MAXGAPS, default=ten, verbose_name="")
+    maxgap = models.FloatField(choices=MAXGAPS, default=ten, verbose_name="Max gap")
 
     inf = 'inf'
     t30 = '30'
@@ -44,7 +44,7 @@ class Problem(models.Model):
         (t3600, '1h'),
     ]
 
-    maxtime = models.CharField(max_length=50, choices=MAXTIMES, default=inf, verbose_name="")
+    maxtime = models.CharField(max_length=50, choices=MAXTIMES, default=inf, verbose_name="Max time")
 
     def delete(self, *args, **kwargs):
         self.lp.delete()
@@ -102,7 +102,31 @@ class UserProblem(models.Model):
         (quater, '25%')
     ]
     
-    maxgap = models.FloatField(choices=MAXGAPS, default=ten, verbose_name="")
+    maxgap = models.FloatField(choices=MAXGAPS, default=ten, verbose_name="Max gap")
+
+    inf = 'inf'
+    t30 = '30'
+    t60 = '60'
+    t300 = '300'
+    t600 = '600'
+    t1200 = '1200'
+    t1800 = '1800'
+    t2400 = '2400'
+    t3600 = '3600'
+
+    MAXTIMES = [
+        (inf, 'Infinity'),
+        (t30, '30s'),
+        (t60, '1m'),
+        (t300, '5m'),
+        (t600, '10m'),
+        (t1200, '20m'),
+        (t1800, '30m'),
+        (t2400, '40m'),
+        (t3600, '1h'),
+    ]
+
+    maxtime = models.CharField(max_length=50, choices=MAXTIMES, default=inf, verbose_name="Max time")
 
     def delete(self, *args, **kwargs):
         self.lp.delete()

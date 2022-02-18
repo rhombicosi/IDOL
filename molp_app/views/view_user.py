@@ -74,9 +74,11 @@ def submit_user_problem(request, pk):
 
         if user_maxgap_form.is_valid():
             maxgap = user_maxgap_form.cleaned_data["maxgap"]
+            maxtime = user_maxgap_form.cleaned_data["maxtime"]
             # user_maxgap_form.save()
             
             problem.maxgap = maxgap
+            problem.maxtime = maxtime
             problem.save()
 
         p = serializers.serialize('json', [problem])

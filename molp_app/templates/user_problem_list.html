@@ -33,10 +33,7 @@
           <td>
             <form method="post" action="{% url 'submit_user_problem' problem.pk %}">
               {% csrf_token %}
-              <div style="white-space: nowrap">
-                <p style="display: inline-block;"> Max gap</p>
-                <div style="display: inline-block;">{{ user_maxgap_form|crispy }}</div>
-              </div>                            
+              {{ user_maxgap_form|crispy }}    
               <div style="display: inline-block"><button type="submit" class="btn btn-primary btn-sm">Make Chebyshev</button></div>
             </form>
           </td>
