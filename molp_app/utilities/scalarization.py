@@ -166,8 +166,6 @@ def calculate_reference(num_of_obj, models, maxgap, maxtime):
         m = models[obj]
 
         # optimization with CBC
-        # m.max_gap = 0.1
-        # status = m.optimize(max_seconds=float('inf'))
         m.max_gap = maxgap
         status = m.optimize(max_seconds=float(maxtime))
 

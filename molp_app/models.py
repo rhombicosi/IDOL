@@ -11,13 +11,13 @@ class Problem(models.Model):
     task_status = models.CharField(max_length=50, null=True, blank=True)
     
     zero = 0
-    ten = 0.1
-    quater = 0.25
+    ten = 0.01
+    quater = 0.025
 
     MAXGAPS = [
         (zero, '0%'),
-        (ten, '10%'),
-        (quater, '25%')
+        (ten, '1%'),
+        (quater, '2.5%')
     ]
     
     maxgap = models.FloatField(choices=MAXGAPS, default=ten, verbose_name="Max gap")
@@ -93,13 +93,13 @@ class UserProblem(models.Model):
     task_status = models.CharField(max_length=50, null=True, blank=True)
 
     zero = 0
-    ten = 0.1
-    quater = 0.25
+    ten = 0.01
+    quater = 0.025
 
     MAXGAPS = [
         (zero, '0%'),
-        (ten, '10%'),
-        (quater, '25%')
+        (ten, '1%'),
+        (quater, '2.5%')
     ]
     
     maxgap = models.FloatField(choices=MAXGAPS, default=ten, verbose_name="Max gap")
